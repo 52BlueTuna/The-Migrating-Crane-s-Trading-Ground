@@ -1,0 +1,17 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Sensitive — never commit real API keys
+*.env
+.env.local
+secrets.js
+firebase-key.json
+
+# Node (if you add a build step later)
+node_modules/
+package-lock.json
