@@ -205,6 +205,17 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
 .bv-input{flex:1;padding:8px 12px;border:1px solid var(--gold);border-radius:7px;font-family:"DM Mono",monospace;font-size:12px;background:rgba(201,168,76,.06);outline:none;}
 .bv-input:focus{background:white;}
 .bv-send{background:var(--pine);color:var(--cream);border:none;padding:8px 14px;border-radius:7px;font-family:"DM Mono",monospace;font-size:11px;cursor:pointer;}
+.auth-overlay{position:fixed;inset:0;z-index:600;background:var(--parch);display:flex;align-items:center;justify-content:center;}
+.auth-card{background:white;border:1px solid var(--border);border-radius:14px;padding:36px 40px;width:100%;max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.09);}
+.auth-logo{text-align:center;margin-bottom:18px;font-size:48px;}
+.auth-title{font-family:"Cormorant Garamond",serif;font-size:26px;font-weight:700;color:var(--pine);text-align:center;margin-bottom:3px;}
+.auth-sub{font-size:10px;color:var(--muted);text-align:center;margin-bottom:24px;letter-spacing:.08em;text-transform:uppercase;}
+.auth-tabs{display:flex;gap:4px;background:var(--parch2);border-radius:8px;padding:3px;margin-bottom:22px;}
+.auth-tab{flex:1;padding:8px;text-align:center;border-radius:6px;cursor:pointer;font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);transition:background .15s,color .15s;}
+.auth-tab.active{background:white;color:var(--pine);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.auth-err{font-size:10px;color:var(--bear);margin-bottom:10px;display:none;padding:8px 10px;background:var(--bear-bg);border-radius:6px;border:1px solid var(--bear-border);}
+.auth-btn{width:100%;background:var(--pine);color:var(--cream);border:none;padding:12px;border-radius:8px;font-family:"DM Mono",monospace;font-size:11px;cursor:pointer;letter-spacing:.04em;margin-top:4px;}
+.auth-btn:hover{background:var(--pine-l);}
 </style>
 </head>
 <body>
@@ -224,7 +235,10 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
       <div class="ni"     onclick="showPage('calendar',this)">Calendar</div>
       <div class="ni"     onclick="showPage('settings',this)">Settings</div>
     </nav>
-    <div class="sb-foot">est. 2026</div>
+    <div class="sb-foot" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span id="sb-username" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">est. 2026</span>
+      <button id="sb-logout-btn" onclick="logout()" style="display:none;background:none;border:none;color:rgba(232,224,208,.4);cursor:pointer;font-size:10px;font-family:'DM Mono',monospace;padding:0;white-space:nowrap;flex-shrink:0;">Logga ut</button>
+    </div>
   </div>
   <div class="main">
     <div class="topbar">
@@ -381,7 +395,8 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
 
     <div class="fsect">Exit <span style="font-weight:400;font-style:italic;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted);">(valfritt &#8212; l&#228;mna tomt f&#246;r &#246;ppen trade)</span></div>
     <div class="fgrid">
-      <div><label class="fl">Exit-pris</label><input class="fi" type="number" id="f-exit" placeholder="0.00 (valfritt)" step="any"></div>
+      <div><label class="fl">Exit-pris</label><input class="fi" type="number" id="f-exit" placeholder="0.00 (valfritt)" step="any" oninput="calcLogPnl()"></div>
+      <div><label class="fl">Faktiskt PNL</label><input class="fi" type="number" id="f-pnl" placeholder="0.00 (valfritt)" step="any"></div>
       <div><label class="fl">Anteckningar</label><input class="fi" id="f-notes" placeholder="Setup, tankar&#8230;"></div>
     </div>
 
@@ -505,8 +520,20 @@ function handleTradeImage(e){
   reader.readAsDataURL(file);
 }
 
+function calcLogPnl(){
+  var eEl=document.getElementById('f-entry');
+  var xEl=document.getElementById('f-exit');
+  var szEl=document.getElementById('f-size');
+  var pEl=document.getElementById('f-pnl');
+  if(!eEl||!xEl||!szEl||!pEl)return;
+  var entry=parseFloat(eEl.value),exit=parseFloat(xEl.value),size=parseFloat(szEl.value);
+  if(isNaN(entry)||isNaN(exit)||isNaN(size))return;
+  var pnl=currentDir==='long'?(exit-entry)*size:(entry-exit)*size;
+  pEl.value=Math.round(pnl*100)/100;
+}
+
 function openLogModal(){
-  var ids=['f-entry','f-size','f-sl','f-tp','f-exit','f-notes'];
+  var ids=['f-entry','f-size','f-sl','f-tp','f-exit','f-pnl','f-notes'];
   for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.value='';}
   var tk=document.getElementById('f-ticker');if(tk)tk.value='GBPUSD';
   var iw=document.getElementById('img-thumb-wrap');if(iw)iw.style.display='none';
@@ -571,9 +598,11 @@ function saveTrade(){
   var notes=notesEl?notesEl.value:'';
   var rr=null;if(sl&&tp)rr=(Math.abs(tp-entry)/Math.abs(entry-sl)).toFixed(2);
   var exitVal=exitEl&&exitEl.value.trim()!==''?parseFloat(exitEl.value):NaN;
-  if(!isNaN(exitVal)){
-    var pnl=currentDir==='long'?(exitVal-entry)*size:(entry-exitVal)*size;
-    closedTrades.unshift({id:Date.now(),ticker:ticker,entry:entry,exit:exitVal,size:size,dir:currentDir,sl:sl,tp:tp,rr:rr,pnl:pnl,date:date,closeDate:date,notes:notes});
+  var pnlEl=document.getElementById('f-pnl');
+  var manualPnl=pnlEl&&pnlEl.value.trim()!==''?parseFloat(pnlEl.value):NaN;
+  if(!isNaN(exitVal)||!isNaN(manualPnl)){
+    var pnl=!isNaN(manualPnl)?manualPnl:(currentDir==='long'?(exitVal-entry)*size:(entry-exitVal)*size);
+    closedTrades.unshift({id:Date.now(),ticker:ticker,entry:entry,exit:!isNaN(exitVal)?exitVal:null,size:size,dir:currentDir,sl:sl,tp:tp,rr:rr,pnl:pnl,date:date,closeDate:date,notes:notes});
   } else {
     openTrades.unshift({id:Date.now(),ticker:ticker,entry:entry,size:size,dir:currentDir,sl:sl,tp:tp,rr:rr,date:date,notes:notes});
   }
@@ -664,6 +693,7 @@ function refreshTG(){
     } else {cb.innerHTML='<tr><td colspan="11"><div class="empty">No closed trades yet</div></td></tr>';}
   }
   updateMigration();
+  saveLocalTrades();
 }
 
 function generateLink(){
@@ -804,7 +834,7 @@ function renderCalendar(){
     var dd=dm[key],cls='';
     if(c.other)cls+=' other-month';if(key===tStr&&!c.other)cls+=' today';if(dd&&!c.other)cls+=dd.pnl>=0?' win':' loss';
     var inner='<div class="cal-day-num">'+c.day+'</div>';
-    if(dd&&!c.other)inner+='<div class="cal-pnl '+(dd.pnl>=0?'pos':'neg')+'">'+fmt(dd.pnl,false)+'</div><div class="cal-meta">T: '+dd.trades+' W: '+dd.wins+' L: '+dd.losses+'</div>';
+    if(dd&&!c.other)inner+='<div class="cal-pnl '+(dd.pnl>=0?'pos':'neg')+'">'+fmt(dd.pnl,false)+'</div><div class="cal-meta"><span style="color:#2a6e2d;">W: '+dd.wins+'</span>&nbsp;&nbsp;<span style="color:#a83030;">L: '+dd.losses+'</span></div>';
     html+='<td class="'+cls.trim()+'">'+inner+'</td>';
     if(i%7===6)html+='</tr>';
   }
@@ -934,16 +964,111 @@ confirmClose=function(){
   if(t)pushToSupabase(t);
 };
 
-// Init on load
-if(SB_URL&&SB_KEY){
-  testSupabase().then(function(ok){
-    if(ok){updateCloudBadge('ok');loadFromSupabase();}
-    else updateCloudBadge('err');
-  });
+// ── AUTH ─────────────────────────────────────────────────────
+var craneSession=null;
+
+function hashPw(pw){
+  var h=0;for(var i=0;i<pw.length;i++){h=((h<<5)-h)+pw.charCodeAt(i);h|=0;}
+  return 'h'+Math.abs(h).toString(36);
 }
 
+function saveLocalTrades(){
+  if(!craneSession)return;
+  var key='crane_trades_'+craneSession.userId;
+  try{localStorage.setItem(key,JSON.stringify({open:openTrades,closed:closedTrades,comments:tradeComments}));}catch(e){}
+}
 
-var editingOpenId=null,editDir="long",editingClosedId=null;
+function loadLocalTrades(){
+  if(!craneSession)return;
+  var key='crane_trades_'+craneSession.userId;
+  var data=localStorage.getItem(key);
+  if(data){try{var d=JSON.parse(data);openTrades=d.open||[];closedTrades=d.closed||[];tradeComments=d.comments||{};}catch(e){}}
+}
+
+function showAuthErr(form,msg){
+  var id=form==='login'?'auth-login-err':'auth-reg-err';
+  var el=document.getElementById(id);if(el){el.textContent=msg;el.style.display='block';}
+}
+
+function switchAuthTab(tab){
+  var lf=document.getElementById('auth-login-form'),rf=document.getElementById('auth-reg-form');
+  var tl=document.getElementById('auth-tab-login'),tr=document.getElementById('auth-tab-reg');
+  if(tab==='login'){lf.style.display='block';rf.style.display='none';tl.className='auth-tab active';tr.className='auth-tab';}
+  else{lf.style.display='none';rf.style.display='block';tl.className='auth-tab';tr.className='auth-tab active';}
+}
+
+function authLogin(){
+  var un=(document.getElementById('auth-login-un')||{}).value||'';
+  var pw=(document.getElementById('auth-login-pw')||{}).value||'';
+  un=un.trim();
+  if(!un||!pw){showAuthErr('login','Fyll i alla fält.');return;}
+  var users=JSON.parse(localStorage.getItem('crane_users')||'[]');
+  var user=null;
+  for(var i=0;i<users.length;i++){if((users[i].username===un||users[i].email===un)&&users[i].passwordHash===hashPw(pw)){user=users[i];break;}}
+  if(!user){showAuthErr('login','Fel användarnamn eller lösenord.');return;}
+  craneSession={userId:user.id,username:user.username,email:user.email};
+  localStorage.setItem('crane_session',JSON.stringify(craneSession));
+  var el=document.getElementById('sb-username');if(el)el.textContent=craneSession.username;
+  var lb=document.getElementById('sb-logout-btn');if(lb)lb.style.display='block';
+  document.getElementById('auth-overlay').style.display='none';
+  loadLocalTrades();refreshTG();
+  if(SB_URL&&SB_KEY){testSupabase().then(function(ok){if(ok){updateCloudBadge('ok');loadFromSupabase();}else updateCloudBadge('err');});}
+}
+
+function authRegister(){
+  var un=(document.getElementById('auth-reg-un')||{}).value||'';
+  var em=(document.getElementById('auth-reg-email')||{}).value||'';
+  var pw=(document.getElementById('auth-reg-pw')||{}).value||'';
+  var pw2=(document.getElementById('auth-reg-pw2')||{}).value||'';
+  un=un.trim();em=em.trim();
+  if(!un||!em||!pw){showAuthErr('reg','Fyll i alla fält.');return;}
+  if(pw!==pw2){showAuthErr('reg','Lösenorden matchar inte.');return;}
+  if(pw.length<6){showAuthErr('reg','Lösenordet måste vara minst 6 tecken.');return;}
+  var users=JSON.parse(localStorage.getItem('crane_users')||'[]');
+  for(var i=0;i<users.length;i++){
+    if(users[i].username===un){showAuthErr('reg','Användarnamnet är redan taget.');return;}
+    if(users[i].email===em){showAuthErr('reg','E-postadressen används redan.');return;}
+  }
+  var user={id:Date.now().toString(),username:un,email:em,passwordHash:hashPw(pw)};
+  users.push(user);
+  localStorage.setItem('crane_users',JSON.stringify(users));
+  craneSession={userId:user.id,username:user.username,email:user.email};
+  localStorage.setItem('crane_session',JSON.stringify(craneSession));
+  var el=document.getElementById('sb-username');if(el)el.textContent=craneSession.username;
+  var lb=document.getElementById('sb-logout-btn');if(lb)lb.style.display='block';
+  document.getElementById('auth-overlay').style.display='none';
+  refreshTG();
+}
+
+function logout(){
+  if(!confirm('Logga ut från '+( craneSession?craneSession.username:'')+'?'))return;
+  saveLocalTrades();
+  localStorage.removeItem('crane_session');
+  craneSession=null;
+  openTrades=[];closedTrades=[];tradeComments={};
+  var el=document.getElementById('sb-username');if(el)el.textContent='est. 2026';
+  var lb=document.getElementById('sb-logout-btn');if(lb)lb.style.display='none';
+  refreshTG();
+  document.getElementById('auth-overlay').style.display='flex';
+}
+
+// Init on load
+(function initAuth(){
+  var sess=localStorage.getItem('crane_session');
+  if(sess){try{craneSession=JSON.parse(sess);}catch(e){craneSession=null;}}
+  if(!craneSession){
+    document.getElementById('auth-overlay').style.display='flex';
+  } else {
+    var el=document.getElementById('sb-username');if(el)el.textContent=craneSession.username;
+    var lb=document.getElementById('sb-logout-btn');if(lb)lb.style.display='block';
+    document.getElementById('auth-overlay').style.display='none';
+    loadLocalTrades();refreshTG();
+    if(SB_URL&&SB_KEY){testSupabase().then(function(ok){if(ok){updateCloudBadge('ok');loadFromSupabase();}else updateCloudBadge('err');});}
+  }
+})();
+
+
+var editingOpenId=null,editDir="long",editingClosedId=null,editClosedDir="long";
 
 function openEditModal(id){
   editingOpenId=id;
@@ -958,6 +1083,13 @@ function openEditModal(id){
   var m=document.getElementById("edit-open-modal");if(m)m.classList.add("open");
 }
 function closeEditModal(){var m=document.getElementById("edit-open-modal");if(m)m.classList.remove("open");}
+function setEditClosedDir(d){
+  editClosedDir=d;
+  var dl=document.getElementById("ec-dir-long");
+  var ds=document.getElementById("ec-dir-short");
+  if(dl)dl.className="dir-btn long"+(d==="long"?" active":"");
+  if(ds)ds.className="dir-btn short"+(d==="short"?" active":"");
+}
 function setEditDir(d){
   editDir=d;
   var dl=document.getElementById("edit-dir-long");
@@ -999,7 +1131,8 @@ function openEditClosedModal(id){
   function se(x,v){var e=document.getElementById(x);if(e)e.value=(v!=null)?v:"";}
   se("ec-entry",t.entry);se("ec-exit",t.exit||"");se("ec-sl",t.sl||"");
   se("ec-tp",t.tp||"");se("ec-size",t.size);se("ec-date",t.closeDate||t.date||"");
-  se("ec-notes",t.notes||"");
+  se("ec-notes",t.notes||"");se("ec-pnl",t.pnl!=null?t.pnl:"");
+  setEditClosedDir(t.dir||"long");
   var m=document.getElementById("edit-closed-modal");if(m)m.classList.add("open");
 }
 function closeEditClosedModal(){var m=document.getElementById("edit-closed-modal");if(m)m.classList.remove("open");}
@@ -1010,12 +1143,13 @@ function saveEditClosed(){
   function gv(x){var e=document.getElementById(x);return e?e.value:"";}
   function gn(x){return parseFloat(gv(x));}
   var en=gn("ec-entry"),ex=gn("ec-exit"),sz=gn("ec-size");
-  if(isNaN(en)||isNaN(ex)||isNaN(sz)){alert("Fyll i entry, exit och storlek.");return;}
+  if(isNaN(en)||isNaN(sz)){alert("Fyll i entry och storlek.");return;}
   var sl=gn("ec-sl")||null,tp=gn("ec-tp")||null;
   var rr=null;if(sl&&tp)rr=(Math.abs(tp-en)/Math.abs(en-sl)).toFixed(2);
   var t=closedTrades[idx];
-  var pnl=t.dir==="long"?(ex-en)*sz:(en-ex)*sz;
-  closedTrades[idx]={id:t.id,ticker:t.ticker,dir:t.dir,entry:en,exit:ex,size:sz,
+  var manualPnl=gv("ec-pnl").trim()!==''?gn("ec-pnl"):NaN;
+  var pnl=!isNaN(manualPnl)?manualPnl:(!isNaN(ex)?(editClosedDir==="long"?(ex-en)*sz:(en-ex)*sz):t.pnl);
+  closedTrades[idx]={id:t.id,ticker:t.ticker,dir:editClosedDir,entry:en,exit:!isNaN(ex)?ex:t.exit||null,size:sz,
     sl:sl,tp:tp,rr:rr,pnl:pnl,date:t.date,closeDate:gv("ec-date")||t.closeDate||t.date,
     notes:gv("ec-notes"),img:t.img||null};
   closeEditClosedModal();refreshTG();
@@ -1107,6 +1241,12 @@ function saveEditClosed(){
 <div class="modal">
   <div class="modal-head"><div class="modal-title">Redigera st&#228;ngd trade</div><div class="modal-sub">&#196;ndra detaljer f&#246;r den st&#228;ngda traden</div></div>
   <div class="modal-body">
+    <div class="fsect">Riktning</div>
+    <div class="dir-toggle">
+      <div class="dir-btn long active" id="ec-dir-long" onclick="setEditClosedDir('long')">&#9650; LONG</div>
+      <div class="dir-btn short" id="ec-dir-short" onclick="setEditClosedDir('short')">&#9660; SHORT</div>
+    </div>
+    <div class="divider"></div>
     <div class="fgrid">
       <div><label class="fl">Entry-pris</label><input class="fi" type="number" id="ec-entry" placeholder="1.2500" step="any"></div>
       <div><label class="fl">Exit-pris</label><input class="fi" type="number" id="ec-exit" placeholder="1.2600" step="any"></div>
@@ -1114,6 +1254,7 @@ function saveEditClosed(){
       <div><label class="fl" style="color:#2a6e2d;">Take Profit (TP)</label><input class="fi tp-f" type="number" id="ec-tp" placeholder="1.2600" step="any"></div>
       <div><label class="fl">Storlek (lots)</label><input class="fi" type="number" id="ec-size" step="any"></div>
       <div><label class="fl">Datum</label><input class="fi" type="date" id="ec-date"></div>
+      <div><label class="fl">Faktiskt PNL</label><input class="fi" type="number" id="ec-pnl" placeholder="0.00 (valfritt)" step="any"></div>
     </div>
     <div class="divider"></div>
     <div class="fsect">Anteckningar</div>
@@ -1122,6 +1263,39 @@ function saveEditClosed(){
   <div class="modal-foot">
     <button class="btn-cancel" onclick="closeEditClosedModal()">Avbryt</button>
     <button class="btn-save" onclick="saveEditClosed()">Spara &#228;ndringar</button>
+  </div>
+</div>
+</div>
+
+<!-- AUTH OVERLAY -->
+<div id="auth-overlay" class="auth-overlay">
+<div class="auth-card">
+  <div class="auth-logo">&#129413;</div>
+  <div class="auth-title">The Migrating Crane</div>
+  <div class="auth-sub">Trading Ground</div>
+  <div class="auth-tabs">
+    <div class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Logga in</div>
+    <div class="auth-tab" id="auth-tab-reg" onclick="switchAuthTab('reg')">Registrera</div>
+  </div>
+  <div id="auth-login-form">
+    <div id="auth-login-err" class="auth-err"></div>
+    <label class="fl">Användarnamn eller e-post</label>
+    <input class="fi" id="auth-login-un" type="text" placeholder="ditt_namn" style="margin-bottom:12px;width:100%;">
+    <label class="fl">Lösenord</label>
+    <input class="fi" id="auth-login-pw" type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" style="margin-bottom:16px;width:100%;" onkeydown="if(event.key==='Enter')authLogin()">
+    <button class="auth-btn" onclick="authLogin()">Logga in</button>
+  </div>
+  <div id="auth-reg-form" style="display:none;">
+    <div id="auth-reg-err" class="auth-err"></div>
+    <label class="fl">Användarnamn</label>
+    <input class="fi" id="auth-reg-un" type="text" placeholder="ditt_namn" style="margin-bottom:12px;width:100%;">
+    <label class="fl">E-post</label>
+    <input class="fi" id="auth-reg-email" type="email" placeholder="du@email.com" style="margin-bottom:12px;width:100%;">
+    <label class="fl">Lösenord</label>
+    <input class="fi" id="auth-reg-pw" type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" style="margin-bottom:12px;width:100%;">
+    <label class="fl">Bekräfta lösenord</label>
+    <input class="fi" id="auth-reg-pw2" type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" style="margin-bottom:16px;width:100%;" onkeydown="if(event.key==='Enter')authRegister()">
+    <button class="auth-btn" onclick="authRegister()">Skapa konto</button>
   </div>
 </div>
 </div>
