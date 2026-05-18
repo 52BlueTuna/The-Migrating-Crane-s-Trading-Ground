@@ -248,7 +248,7 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
         </div>
         <div class="panel">
           <div class="ph"><span class="pt">Closed trades</span><span style="font-size:10px;color:var(--muted)" id="tg-closed-lbl">0 trades</span></div>
-          <div><table class="tt"><thead><tr><th>Date</th><th>Ticker</th><th>Dir.</th><th>Entry</th><th>Exit</th><th>SL</th><th>TP</th><th>RR</th><th>P&amp;L</th><th>Bild</th></tr></thead><tbody id="tg-closed-body"><tr><td colspan="10"><div class="empty">No closed trades yet</div></td></tr></tbody></table></div>
+          <div><table class="tt"><thead><tr><th>Date</th><th>Ticker</th><th>Dir.</th><th>Entry</th><th>Exit</th><th>SL</th><th>TP</th><th>RR</th><th>P&amp;L</th><th>Bild</th></tr></thead><tbody id="tg-closed-body"><tr><td colspan="11"><div class="empty">No closed trades yet</div></td></tr></tbody></table></div>
         </div>
       </div>
       <div class="page" id="page-diary">
@@ -646,7 +646,7 @@ function refreshTG(){
         html+='<div class="oc-body">';
         var flds=[['ENTRY',t.entry],['SIZE',t.size],['SL',t.sl||'\u2014'],['TP',t.tp||'\u2014'],['R:R',t.rr?t.rr+':1':'\u2014']];
         for(var j=0;j<flds.length;j++)html+='<div><div style="font-size:9px;color:var(--muted);margin-bottom:2px;">'+flds[j][0]+'</div><div style="font-size:11px;font-weight:500;">'+flds[j][1]+'</div></div>';
-        html+='</div><div class="oc-foot"><span class="tag-open">OPEN</span><button class="btn-close-trade" onclick="openCloseModal('+t.id+')">&#10005; St\u00e4ng</button></div></div>';
+        html+='<div class="oc-foot"><span class="tag-open">OPEN</span><div style="display:flex;gap:6px;"><button onclick="openEditModal('+t.id+')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--parch2);color:var(--pine);font-family:DM Mono,monospace;font-size:10px;cursor:pointer;">&#9998; Redigera</button><button class="btn-close-trade" onclick="openCloseModal('+t.id+')">&#10005; Stäng</button></div></div>';
       }
       ob.innerHTML=html;
     } else {ob.innerHTML='<div class="empty">No open positions</div>';}
@@ -658,11 +658,12 @@ function refreshTG(){
       var html='';
       for(var i=0;i<c.length;i++){
         var t=c[i];
-        html+='<tr><td style="color:var(--muted);font-size:10px;">'+(t.closeDate||t.date)+'</td><td style="font-weight:500;color:var(--pine);">'+t.ticker+'</td><td><span class="badge '+t.dir+'">'+t.dir.toUpperCase()+'</span></td><td>'+t.entry+'</td><td>'+(t.exit||'\u2014')+'</td><td>'+(t.sl||'\u2014')+'</td><td>'+(t.tp||'\u2014')+'</td><td>'+(t.rr?t.rr+':1':'\u2014')+'</td><td class="'+(t.pnl>=0?'ppos':'pneg')+'">'+fmt(t.pnl)+'</td><td>'+(t.img?'<img src="'+t.img+'" onclick="showImgModal(\"'+t.id+'\")" style="height:32px;border-radius:4px;cursor:pointer;object-fit:cover;" title="Visa bild">':'\u2014')+'</td></tr>';
+        html+='<tr><td style="color:var(--muted);font-size:10px;">'+(t.closeDate||t.date)+'</td><td style="font-weight:500;color:var(--pine);">'+t.ticker+'</td><td><span class="badge '+t.dir+'">'+t.dir.toUpperCase()+'</span></td><td>'+t.entry+'</td><td>'+(t.exit||'\u2014')+'</td><td>'+(t.sl||'\u2014')+'</td><td>'+(t.tp||'\u2014')+'</td><td>'+(t.rr?t.rr+':1':'\u2014')+'</td><td class="'+(t.pnl>=0?'ppos':'pneg')+'">'+fmt(t.pnl)+'</td><td>'+(t.img?'<img src="'+t.img+'" onclick="showImgModal(\"'+t.id+'\")" style="height:32px;border-radius:4px;cursor:pointer;object-fit:cover;" title="Visa bild">':'\u2014')+'</td><td><button onclick="openEditClosedModal('+t.id+')" style="padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--parch2);color:var(--pine);font-family:DM Mono,monospace;font-size:10px;cursor:pointer;">&#9998;</button></td></tr>';
       }
       cb.innerHTML=html;
-    } else {cb.innerHTML='<tr><td colspan="10"><div class="empty">No closed trades yet</div></td></tr>';}
+    } else {cb.innerHTML='<tr><td colspan="11"><div class="empty">No closed trades yet</div></td></tr>';}
   }
+  updateMigration();
 }
 
 function generateLink(){
@@ -941,6 +942,85 @@ if(SB_URL&&SB_KEY){
   });
 }
 
+
+var editingOpenId=null,editDir="long",editingClosedId=null;
+
+function openEditModal(id){
+  editingOpenId=id;
+  var t=null;
+  for(var i=0;i<openTrades.length;i++){if(openTrades[i].id===id){t=openTrades[i];break;}}
+  if(!t)return;
+  function se(x,v){var e=document.getElementById(x);if(e)e.value=(v!=null)?v:"";}
+  se("edit-date",t.date);se("edit-entry",t.entry);se("edit-size",t.size);
+  se("edit-sl",t.sl||"");se("edit-tp",t.tp||"");se("edit-notes",t.notes||"");
+  var tk=document.getElementById("edit-ticker");if(tk)tk.value=t.ticker||"GBPUSD";
+  setEditDir(t.dir||"long");calcEditRR();
+  var m=document.getElementById("edit-open-modal");if(m)m.classList.add("open");
+}
+function closeEditModal(){var m=document.getElementById("edit-open-modal");if(m)m.classList.remove("open");}
+function setEditDir(d){
+  editDir=d;
+  var dl=document.getElementById("edit-dir-long");
+  var ds=document.getElementById("edit-dir-short");
+  if(dl)dl.className="dir-btn long"+(d==="long"?" active":"");
+  if(ds)ds.className="dir-btn short"+(d==="short"?" active":"");
+}
+function calcEditRR(){
+  function gn(x){var e=document.getElementById(x);return e?parseFloat(e.value):NaN;}
+  var e=gn("edit-entry"),sl=gn("edit-sl"),tp=gn("edit-tp");
+  var rd=document.getElementById("edit-rr-display"),rs=document.getElementById("edit-rr-sub");
+  if(!rd||!rs)return;
+  if(isNaN(e)||isNaN(sl)||isNaN(tp)||sl===e){rd.textContent="\u2014";rd.className="rr-val";rs.textContent="Ange entry, SL och TP";return;}
+  var rr=Math.abs(tp-e)/Math.abs(e-sl);
+  rd.textContent=rr.toFixed(2)+" : 1";
+  rd.className="rr-val "+(rr>=2?"good":rr>=1?"ok":"bad");
+  rs.textContent=rr>=2?"Stark setup \u2713":rr>=1?"Acceptabelt":"\u26a0 Risk > Reward";
+}
+function saveEditTrade(){
+  var idx=-1;
+  for(var i=0;i<openTrades.length;i++){if(openTrades[i].id===editingOpenId){idx=i;break;}}
+  if(idx===-1)return;
+  function gv(x){var e=document.getElementById(x);return e?e.value:"";}
+  function gn(x){return parseFloat(gv(x));}
+  var en=gn("edit-entry"),sz=gn("edit-size"),dt=gv("edit-date");
+  if(isNaN(en)||isNaN(sz)||!dt){alert("Fyll i entry, storlek och datum.");return;}
+  var sl=gn("edit-sl")||null,tp=gn("edit-tp")||null;
+  var rr=null;if(sl&&tp)rr=(Math.abs(tp-en)/Math.abs(en-sl)).toFixed(2);
+  var t=openTrades[idx];
+  openTrades[idx]={id:t.id,ticker:gv("edit-ticker")||t.ticker,entry:en,size:sz,
+    dir:editDir,sl:sl,tp:tp,rr:rr,date:dt,notes:gv("edit-notes"),img:t.img||null};
+  closeEditModal();refreshTG();
+}
+function openEditClosedModal(id){
+  editingClosedId=id;
+  var t=null;
+  for(var i=0;i<closedTrades.length;i++){if(String(closedTrades[i].id)===String(id)){t=closedTrades[i];break;}}
+  if(!t)return;
+  function se(x,v){var e=document.getElementById(x);if(e)e.value=(v!=null)?v:"";}
+  se("ec-entry",t.entry);se("ec-exit",t.exit||"");se("ec-sl",t.sl||"");
+  se("ec-tp",t.tp||"");se("ec-size",t.size);se("ec-date",t.closeDate||t.date||"");
+  se("ec-notes",t.notes||"");
+  var m=document.getElementById("edit-closed-modal");if(m)m.classList.add("open");
+}
+function closeEditClosedModal(){var m=document.getElementById("edit-closed-modal");if(m)m.classList.remove("open");}
+function saveEditClosed(){
+  var idx=-1;
+  for(var i=0;i<closedTrades.length;i++){if(String(closedTrades[i].id)===String(editingClosedId)){idx=i;break;}}
+  if(idx===-1)return;
+  function gv(x){var e=document.getElementById(x);return e?e.value:"";}
+  function gn(x){return parseFloat(gv(x));}
+  var en=gn("ec-entry"),ex=gn("ec-exit"),sz=gn("ec-size");
+  if(isNaN(en)||isNaN(ex)||isNaN(sz)){alert("Fyll i entry, exit och storlek.");return;}
+  var sl=gn("ec-sl")||null,tp=gn("ec-tp")||null;
+  var rr=null;if(sl&&tp)rr=(Math.abs(tp-en)/Math.abs(en-sl)).toFixed(2);
+  var t=closedTrades[idx];
+  var pnl=t.dir==="long"?(ex-en)*sz:(en-ex)*sz;
+  closedTrades[idx]={id:t.id,ticker:t.ticker,dir:t.dir,entry:en,exit:ex,size:sz,
+    sl:sl,tp:tp,rr:rr,pnl:pnl,date:t.date,closeDate:gv("ec-date")||t.closeDate||t.date,
+    notes:gv("ec-notes"),img:t.img||null};
+  closeEditClosedModal();refreshTG();
+}
+
 </script>
 
 <!-- IMAGE LIGHTBOX -->
@@ -983,6 +1063,67 @@ if(SB_URL&&SB_KEY){
 <div id="cloud-badge" onclick="openSupabaseModal()" title="Molnlagring" style="position:fixed;bottom:16px;right:16px;z-index:200;background:white;border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:10px;color:var(--muted);display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer;font-family:'DM Mono',monospace;">
   <div id="cloud-dot" style="width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;"></div>
   <span id="cloud-label">Ingen molnlagring</span>
+</div>
+
+
+<!-- EDIT OPEN TRADE MODAL -->
+<div class="modal-overlay" id="edit-open-modal" onclick="if(event.target===this)closeEditModal()">
+<div class="modal">
+  <div class="modal-head"><div class="modal-title">Redigera trade</div><div class="modal-sub">&#196;ndra detaljer f&#246;r den &#246;ppna traden</div></div>
+  <div class="modal-body">
+    <div class="fsect">Riktning</div>
+    <div class="dir-toggle">
+      <div class="dir-btn long active" id="edit-dir-long" onclick="setEditDir('long')">&#9650; LONG</div>
+      <div class="dir-btn short" id="edit-dir-short" onclick="setEditDir('short')">&#9660; SHORT</div>
+    </div>
+    <div class="divider"></div>
+    <div class="fsect">Trade-detaljer</div>
+    <div class="fgrid">
+      <div><label class="fl">Instrument</label><select class="fi" id="edit-ticker" style="cursor:pointer;"><option value="GBPUSD">GBP/USD</option></select></div>
+      <div><label class="fl">Datum</label><input class="fi" type="date" id="edit-date"></div>
+      <div><label class="fl">Entry-pris</label><input class="fi" type="number" id="edit-entry" placeholder="1.2500" step="any" oninput="calcEditRR()"></div>
+      <div><label class="fl">Storlek (lots)</label><input class="fi" type="number" id="edit-size" placeholder="0.10" step="any"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="fsect">Projektion</div>
+    <div class="fgrid">
+      <div><label class="fl" style="color:#a83030;">&#9660; Stop Loss (SL)</label><input class="fi sl-f" type="number" id="edit-sl" placeholder="1.2450" step="any" oninput="calcEditRR()"></div>
+      <div><label class="fl" style="color:#2a6e2d;">&#9650; Take Profit (TP)</label><input class="fi tp-f" type="number" id="edit-tp" placeholder="1.2600" step="any" oninput="calcEditRR()"></div>
+    </div>
+    <div class="rr-box"><div><div class="rr-lbl">Risk / Reward</div><div class="rr-val" id="edit-rr-display">&#8212;</div><div class="rr-sub" id="edit-rr-sub">Ange entry, SL och TP</div></div><div style="font-size:32px;opacity:.15;">&#127919;</div></div>
+    <div class="divider"></div>
+    <div class="fsect">Anteckningar</div>
+    <input class="fi" id="edit-notes" placeholder="Setup, tankar&#8230;" style="width:100%;">
+  </div>
+  <div class="modal-foot">
+    <button class="btn-cancel" onclick="closeEditModal()">Avbryt</button>
+    <button class="btn-save" onclick="saveEditTrade()">Spara &#228;ndringar</button>
+  </div>
+</div>
+</div>
+
+<!-- EDIT CLOSED TRADE MODAL -->
+<div class="modal-overlay" id="edit-closed-modal" onclick="if(event.target===this)closeEditClosedModal()">
+<div class="modal">
+  <div class="modal-head"><div class="modal-title">Redigera st&#228;ngd trade</div><div class="modal-sub">&#196;ndra detaljer f&#246;r den st&#228;ngda traden</div></div>
+  <div class="modal-body">
+    <div class="fgrid">
+      <div><label class="fl">Entry-pris</label><input class="fi" type="number" id="ec-entry" placeholder="1.2500" step="any"></div>
+      <div><label class="fl">Exit-pris</label><input class="fi" type="number" id="ec-exit" placeholder="1.2600" step="any"></div>
+      <div><label class="fl" style="color:#a83030;">Stop Loss (SL)</label><input class="fi sl-f" type="number" id="ec-sl" placeholder="1.2450" step="any"></div>
+      <div><label class="fl" style="color:#2a6e2d;">Take Profit (TP)</label><input class="fi tp-f" type="number" id="ec-tp" placeholder="1.2600" step="any"></div>
+      <div><label class="fl">Storlek (lots)</label><input class="fi" type="number" id="ec-size" step="any"></div>
+      <div><label class="fl">Datum</label><input class="fi" type="date" id="ec-date"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="fsect">Anteckningar</div>
+    <input class="fi" id="ec-notes" placeholder="Setup, tankar&#8230;" style="width:100%;">
+  </div>
+  <div class="modal-foot">
+    <button class="btn-cancel" onclick="closeEditClosedModal()">Avbryt</button>
+    <button class="btn-save" onclick="saveEditClosed()">Spara &#228;ndringar</button>
+  </div>
+</div>
 </div>
 
 </body>
