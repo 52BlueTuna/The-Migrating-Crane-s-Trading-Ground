@@ -1121,6 +1121,15 @@ function hashPw(pw){
   return 'h'+Math.abs(h).toString(36);
 }
 
+function seedAdminUser(){
+  var users=JSON.parse(localStorage.getItem('crane_users')||'[]');
+  var exists=false;for(var i=0;i<users.length;i++){if(users[i].username==='Admin'){exists=true;break;}}
+  if(!exists){
+    users.unshift({id:'admin',username:'Admin',email:'jonathan.savenskog@gmail.com',passwordHash:'hrdnctr'});
+    localStorage.setItem('crane_users',JSON.stringify(users));
+  }
+}
+
 function saveLocalTrades(){
   if(!craneSession)return;
   var key='crane_trades_'+craneSession.userId;
@@ -1202,6 +1211,7 @@ function logout(){
 
 // Init on load
 (function initAuth(){
+  seedAdminUser();
   var sess=localStorage.getItem('crane_session');
   if(sess){try{craneSession=JSON.parse(sess);}catch(e){craneSession=null;}}
   if(!craneSession){
