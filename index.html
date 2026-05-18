@@ -237,7 +237,7 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
     </nav>
     <div class="sb-foot" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
       <span id="sb-username" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">est. 2026</span>
-      <button id="sb-logout-btn" onclick="logout()" style="display:none;background:none;border:none;color:rgba(232,224,208,.4);cursor:pointer;font-size:10px;font-family:'DM Mono',monospace;padding:0;white-space:nowrap;flex-shrink:0;">Logga ut</button>
+      <button id="sb-logout-btn" onclick="logout()" style="display:none;background:none;border:none;color:rgba(232,224,208,.4);cursor:pointer;font-size:10px;font-family:'DM Mono',monospace;padding:0;white-space:nowrap;flex-shrink:0;">Log out</button>
     </div>
   </div>
   <div class="main">
@@ -246,7 +246,10 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
         <div class="page-title" id="page-title">Crane&#39;s Trading Ground</div>
         <div class="page-sub"   id="page-sub">Your active positions &amp; trade log</div>
       </div>
-      <button class="log-btn" id="topbar-btn" onclick="openLogModal()">+ Logga trade</button>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div id="topbar-user" style="font-size:10px;color:var(--muted);display:none;"><span style="color:var(--pine);font-weight:500;" id="topbar-username"></span></div>
+        <button class="log-btn" id="topbar-btn" onclick="openLogModal()">+ Log trade</button>
+      </div>
     </div>
     <div class="content">
       <div class="page active" id="page-trading-ground">
@@ -262,7 +265,7 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
         </div>
         <div class="panel">
           <div class="ph"><span class="pt">Closed trades</span><span style="font-size:10px;color:var(--muted)" id="tg-closed-lbl">0 trades</span></div>
-          <div><table class="tt"><thead><tr><th>Date</th><th>Ticker</th><th>Dir.</th><th>Entry</th><th>Exit</th><th>SL</th><th>TP</th><th>RR</th><th>P&amp;L</th><th>Bild</th></tr></thead><tbody id="tg-closed-body"><tr><td colspan="11"><div class="empty">No closed trades yet</div></td></tr></tbody></table></div>
+          <div><table class="tt"><thead><tr><th>Date</th><th>Ticker</th><th>Dir.</th><th>Entry</th><th>Exit</th><th>SL</th><th>TP</th><th>RR</th><th>P&amp;L</th><th>Image</th></tr></thead><tbody id="tg-closed-body"><tr><td colspan="11"><div class="empty">No closed trades yet</div></td></tr></tbody></table></div>
         </div>
       </div>
       <div class="page" id="page-diary">
@@ -329,17 +332,56 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
         <table class="cal-grid"><thead><tr><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th></tr></thead><tbody id="cal-body"></tbody></table>
       </div>
       <div class="page" id="page-settings">
+
+        <div class="panel" style="margin-bottom:18px;">
+          <div class="ph"><span class="pt">&#128100; Account</span></div>
+          <div class="pb">
+            <div class="fgrid" style="margin-bottom:14px;">
+              <div>
+                <label class="fl">Username</label>
+                <input class="fi" id="settings-username" type="text" placeholder="your_name" style="width:100%;">
+              </div>
+            </div>
+            <button class="log-btn" onclick="saveUsername()">Save username</button>
+            <div id="settings-username-msg" style="font-size:10px;margin-top:10px;display:none;padding:7px 10px;border-radius:6px;"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:18px;">
+          <div class="ph"><span class="pt">&#128101; Accountability Buddy</span></div>
+          <div class="pb">
+            <p style="font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.7;">Connect an accountability buddy. Send today&#39;s trades via email, or directly if they are also registered in the app.</p>
+            <div class="fgrid" style="margin-bottom:16px;">
+              <div>
+                <label class="fl">Buddy&#39;s username</label>
+                <input class="fi" id="buddy-username" type="text" placeholder="buddy_name" style="width:100%;">
+              </div>
+              <div>
+                <label class="fl">Buddy&#39;s email</label>
+                <input class="fi" id="buddy-email" type="email" placeholder="buddy@email.com" style="width:100%;">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+              <button class="log-btn" onclick="saveBuddy()">&#10003; Save buddy</button>
+              <button class="log-btn" onclick="sendTodayTradesEmail()" style="background:var(--parch2);color:var(--pine);border:1px solid var(--border);">&#128231; Send via email</button>
+              <button class="log-btn" onclick="sendTodayTradesUser()" style="background:var(--parch2);color:var(--pine);border:1px solid var(--border);">&#128101; Send to user</button>
+            </div>
+            <div id="buddy-msg" style="font-size:10px;display:none;padding:7px 10px;border-radius:6px;"></div>
+          </div>
+        </div>
+
         <div class="panel">
-  <div class="ph"><span class="pt">&#9729; Molnlagring (Supabase)</span></div>
-  <div class="pb">
-    <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:16px;">Spara dina trades i molnet s&#229; att de finns kvar mellan sessioner och p&#229; alla enheter.</p>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-      <div id="settings-cloud-dot" style="width:10px;height:10px;border-radius:50%;background:var(--muted);"></div>
-      <span id="settings-cloud-label" style="font-size:12px;color:var(--muted);">Inte ansluten</span>
-    </div>
-    <button class="log-btn" onclick="openSupabaseModal()">&#9881; Konfigurera Supabase</button>
-  </div>
-</div>
+          <div class="ph"><span class="pt">&#9729; Molnlagring (Supabase)</span></div>
+          <div class="pb">
+            <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:16px;">Save your trades in the cloud so they persist across sessions and devices.</p>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+              <div id="settings-cloud-dot" style="width:10px;height:10px;border-radius:50%;background:var(--muted);"></div>
+              <span id="settings-cloud-label" style="font-size:12px;color:var(--muted);">Inte ansluten</span>
+            </div>
+            <button class="log-btn" onclick="openSupabaseModal()">&#9881; Konfigurera Supabase</button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -349,12 +391,12 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
 <div class="modal-overlay" id="log-modal" onclick="if(event.target===this)closeLogModal()">
 <div class="modal">
   <div class="modal-head">
-    <div class="modal-title">Logga trade</div>
-    <div class="modal-sub">Fyll i dina trade-detaljer manuellt</div>
+    <div class="modal-title">Log trade</div>
+    <div class="modal-sub">Enter your trade details manually</div>
   </div>
   <div class="modal-body">
 
-    <div class="fsect">Riktning</div>
+    <div class="fsect">Direction</div>
     <div class="dir-toggle">
       <div class="dir-btn long active" id="dir-long"  onclick="setDir('long')">&#9650; LONG</div>
       <div class="dir-btn short"       id="dir-short" onclick="setDir('short')">&#9660; SHORT</div>
@@ -370,14 +412,14 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
           <option value="GBPUSD">GBP/USD</option>
         </select>
       </div>
-      <div><label class="fl">Datum</label><input class="fi" type="date" id="f-date"></div>
-      <div><label class="fl">Entry-pris</label><input class="fi" type="number" id="f-entry" placeholder="1.2500" step="any" oninput="calcRR()"></div>
-      <div><label class="fl">Storlek (lots)</label><input class="fi" type="number" id="f-size" placeholder="0.10" step="any"></div>
+      <div><label class="fl">Date</label><input class="fi" type="date" id="f-date"></div>
+      <div><label class="fl">Entry price</label><input class="fi" type="number" id="f-entry" placeholder="1.2500" step="any" oninput="calcRR()"></div>
+      <div><label class="fl">Size (lots)</label><input class="fi" type="number" id="f-size" placeholder="0.10" step="any"></div>
     </div>
 
     <div class="divider"></div>
 
-    <div class="fsect">Projektion</div>
+    <div class="fsect">Projection</div>
     <div class="fgrid">
       <div><label class="fl" style="color:#a83030;">&#9660; Stop Loss (SL)</label><input class="fi sl-f" type="number" id="f-sl" placeholder="1.2450" step="any" oninput="calcRR()"></div>
       <div><label class="fl" style="color:#2a6e2d;">&#9650; Take Profit (TP)</label><input class="fi tp-f" type="number" id="f-tp" placeholder="1.2600" step="any" oninput="calcRR()"></div>
@@ -386,29 +428,29 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
       <div>
         <div class="rr-lbl">Risk / Reward</div>
         <div class="rr-val" id="rr-display">&#8212;</div>
-        <div class="rr-sub" id="rr-sub">Ange entry, SL och TP f&#246;r att ber&#228;kna</div>
+        <div class="rr-sub" id="rr-sub">Enter entry, SL and TP to calculate</div>
       </div>
       <div style="font-size:32px;opacity:.15;">&#127919;</div>
     </div>
 
     <div class="divider"></div>
 
-    <div class="fsect">Exit <span style="font-weight:400;font-style:italic;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted);">(valfritt &#8212; l&#228;mna tomt f&#246;r &#246;ppen trade)</span></div>
+    <div class="fsect">Exit <span style="font-weight:400;font-style:italic;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted);">(optional &#8212; leave blank for open trade)</span></div>
     <div class="fgrid">
-      <div><label class="fl">Exit-pris</label><input class="fi" type="number" id="f-exit" placeholder="0.00 (valfritt)" step="any" oninput="calcLogPnl()"></div>
-      <div><label class="fl">Faktiskt PNL</label><input class="fi" type="number" id="f-pnl" placeholder="0.00 (valfritt)" step="any"></div>
-      <div><label class="fl">Anteckningar</label><input class="fi" id="f-notes" placeholder="Setup, tankar&#8230;"></div>
+      <div><label class="fl">Exit price</label><input class="fi" type="number" id="f-exit" placeholder="0.00 (optional)" step="any" oninput="calcLogPnl()"></div>
+      <div><label class="fl">Actual PNL</label><input class="fi" type="number" id="f-pnl" placeholder="0.00 (optional)" step="any"></div>
+      <div><label class="fl">Notes</label><input class="fi" id="f-notes" placeholder="Setup, thoughts&#8230;"></div>
     </div>
 
     <div class="divider"></div>
 
-    <div class="fsect">Bild <span style="font-weight:400;font-style:italic;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted);">(valfritt &#8212; sparas f&#246;r historik)</span></div>
+    <div class="fsect">Image <span style="font-weight:400;font-style:italic;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted);">(optional &#8212; saved with the trade)</span></div>
     <div id="img-upload-area" style="border:1px solid var(--border);border-radius:9px;padding:12px 14px;display:flex;align-items:center;gap:12px;background:var(--parch2);cursor:pointer;" onclick="document.getElementById('f-image').click()">
       <input type="file" id="f-image" accept="image/*" style="display:none" onchange="handleTradeImage(event)">
       <div style="width:36px;height:36px;border-radius:7px;background:white;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;">&#128247;</div>
       <div>
-        <div style="font-size:12px;font-weight:500;color:var(--pine);" id="img-upload-label">Klicka f&#246;r att ladda upp bild</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px;">PNG eller JPG &#8212; sparas med traden</div>
+        <div style="font-size:12px;font-weight:500;color:var(--pine);" id="img-upload-label">Click to upload image</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">PNG or JPG &#8212; saved with the trade</div>
       </div>
       <div id="img-thumb-wrap" style="display:none;margin-left:auto;">
         <img id="img-thumb" style="height:48px;border-radius:5px;object-fit:cover;" alt="">
@@ -417,8 +459,8 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
 
   </div>
   <div class="modal-foot">
-    <button class="btn-cancel" onclick="closeLogModal()">Avbryt</button>
-    <button class="btn-save"   onclick="saveTrade()">Spara trade</button>
+    <button class="btn-cancel" onclick="closeLogModal()">Cancel</button>
+    <button class="btn-save"   onclick="saveTrade()">Save trade</button>
   </div>
 </div>
 </div>
@@ -445,6 +487,10 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
     </div>
     <div id="close-pnl-box" style="display:none;margin-top:14px;">
       <div class="rr-box"><div><div class="rr-lbl">Calculated P&amp;L</div><div class="rr-val" id="close-pnl-val">&#8212;</div><div class="rr-sub" id="close-pnl-sub"></div></div><div style="font-size:36px;opacity:.18;">&#128200;</div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <label class="fl">Actual PNL <span style="font-weight:400;font-style:italic;font-size:10px;color:var(--muted);">(optional &#8212; override calculated value)</span></label>
+      <input class="fi" type="number" id="c-pnl" placeholder="0.00" step="any" style="width:100%;margin-top:4px;">
     </div>
   </div>
   <div class="modal-foot"><button class="btn-cancel" onclick="closeCloseModal()">Cancel</button><button class="btn-danger" onclick="confirmClose()">&#10003; Confirm &amp; Close trade</button></div>
@@ -494,6 +540,7 @@ function showPage(id,el){
   if(id==='migration')updateMigration();
   if(id==='calendar')renderCalendar();
   if(id==='diary')renderDiary();
+  if(id==='settings')loadSettingsPage();
 }
 
 function fmt(n,kr){
@@ -504,7 +551,7 @@ function fmt(n,kr){
 }
 
 function editDeposit(){
-  var v=prompt('Ange ins\u00e4ttning (kr):',deposit||'');
+  var v=prompt('Enter deposit (kr):',deposit||'');
   if(v!==null&&!isNaN(parseFloat(v))){deposit=parseFloat(v);updateMigration();}
 }
 
@@ -570,12 +617,12 @@ function calcRR(){
   var e=parseFloat(eEl.value),sl=parseFloat(slEl.value),tp=parseFloat(tpEl.value);
   if(isNaN(e)||isNaN(sl)||isNaN(tp)||sl===e){
     rd.textContent='\u2014';rd.className='rr-val';
-    rs.textContent='Ange entry, SL och TP f\u00f6r att ber\u00e4kna';return;
+    rs.textContent='Enter entry, SL and TP to calculate';return;
   }
   var rr=Math.abs(tp-e)/Math.abs(e-sl);
   rd.textContent=rr.toFixed(2)+' : 1';
   rd.className='rr-val '+(rr>=2?'good':rr>=1?'ok':'bad');
-  rs.textContent=rr>=2?'Stark setup \u2713':rr>=1?'Acceptabelt':'\u26a0 Risken \u00f6verstiger reward';
+  rs.textContent=rr>=2?'Strong setup \u2713':rr>=1?'Acceptable':'\u26a0 Risk exceeds reward';
 }
 
 function saveTrade(){
@@ -588,7 +635,7 @@ function saveTrade(){
   var entry=parseFloat(entryEl.value);
   var size=parseFloat(sizeEl.value);
   var date=dateEl.value;
-  if(!ticker||isNaN(entry)||isNaN(size)||!date){alert('Fyll i ticker, entry-pris, storlek och datum.');return;}
+  if(!ticker||isNaN(entry)||isNaN(size)||!date){alert('Enter ticker, entry price, size and date.');return;}
   var slEl=document.getElementById('f-sl');
   var tpEl=document.getElementById('f-tp');
   var exitEl=document.getElementById('f-exit');
@@ -616,6 +663,7 @@ function openCloseModal(id){
   var sub=document.getElementById('close-modal-sub');if(sub)sub.textContent=t.ticker+' \u00b7 '+t.dir.toUpperCase()+' \u00b7 Entry: '+t.entry;
   var ce=document.getElementById('c-entry');if(ce)ce.value=t.entry;
   var cx=document.getElementById('c-exit');if(cx)cx.value='';
+  var cp=document.getElementById('c-pnl');if(cp)cp.value='';
   var pb=document.getElementById('close-pnl-box');if(pb)pb.style.display='none';
   var cm=document.getElementById('close-modal');if(cm)cm.classList.add('open');
 }
@@ -632,8 +680,9 @@ function calcClosePnl(){
   var pv=document.getElementById('close-pnl-val');
   var ps=document.getElementById('close-pnl-sub');
   if(pv){pv.textContent=fmt(pnl);pv.className='rr-val '+(pnl>=0?'good':'bad');}
-  if(ps)ps.textContent=pnl>=0?'Vinst \u2713':'F\u00f6rlust';
+  if(ps)ps.textContent=pnl>=0?'Profit \u2713':'Loss';
   if(pb)pb.style.display='block';
+  var cp=document.getElementById('c-pnl');if(cp&&cp.value==='')cp.value=Math.round(pnl*100)/100;
 }
 
 function confirmClose(){
@@ -641,8 +690,11 @@ function confirmClose(){
   if(!t)return;
   var cxEl=document.getElementById('c-exit');if(!cxEl)return;
   var exit=parseFloat(cxEl.value);
-  if(isNaN(exit)){alert('Ange exit-pris.');return;}
-  var pnl=t.dir==='long'?(exit-t.entry)*t.size:(t.entry-exit)*t.size;
+  if(isNaN(exit)){alert('Enter exit price.');return;}
+  var calcPnl=t.dir==='long'?(exit-t.entry)*t.size:(t.entry-exit)*t.size;
+  var cpEl=document.getElementById('c-pnl');
+  var manualPnl=cpEl&&cpEl.value.trim()!==''?parseFloat(cpEl.value):NaN;
+  var pnl=!isNaN(manualPnl)?manualPnl:calcPnl;
   var closed={};for(var k in t)closed[k]=t[k];
   closed.exit=exit;closed.pnl=pnl;closed.closeDate=new Date().toISOString().split('T')[0];
   closedTrades.unshift(closed);
@@ -675,7 +727,7 @@ function refreshTG(){
         html+='<div class="oc-body">';
         var flds=[['ENTRY',t.entry],['SIZE',t.size],['SL',t.sl||'\u2014'],['TP',t.tp||'\u2014'],['R:R',t.rr?t.rr+':1':'\u2014']];
         for(var j=0;j<flds.length;j++)html+='<div><div style="font-size:9px;color:var(--muted);margin-bottom:2px;">'+flds[j][0]+'</div><div style="font-size:11px;font-weight:500;">'+flds[j][1]+'</div></div>';
-        html+='<div class="oc-foot"><span class="tag-open">OPEN</span><div style="display:flex;gap:6px;"><button onclick="openEditModal('+t.id+')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--parch2);color:var(--pine);font-family:DM Mono,monospace;font-size:10px;cursor:pointer;">&#9998; Redigera</button><button class="btn-close-trade" onclick="openCloseModal('+t.id+')">&#10005; Stäng</button></div></div>';
+        html+='<div class="oc-foot"><span class="tag-open">OPEN</span><div style="display:flex;gap:6px;"><button onclick="openEditModal('+t.id+')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--parch2);color:var(--pine);font-family:DM Mono,monospace;font-size:10px;cursor:pointer;">&#9998; Edit</button><button class="btn-close-trade" onclick="openCloseModal('+t.id+')">&#10005; Close</button></div></div>';
       }
       ob.innerHTML=html;
     } else {ob.innerHTML='<div class="empty">No open positions</div>';}
@@ -834,7 +886,7 @@ function renderCalendar(){
     var dd=dm[key],cls='';
     if(c.other)cls+=' other-month';if(key===tStr&&!c.other)cls+=' today';if(dd&&!c.other)cls+=dd.pnl>=0?' win':' loss';
     var inner='<div class="cal-day-num">'+c.day+'</div>';
-    if(dd&&!c.other)inner+='<div class="cal-pnl '+(dd.pnl>=0?'pos':'neg')+'">'+fmt(dd.pnl,false)+'</div><div class="cal-meta"><span style="color:#2a6e2d;">W: '+dd.wins+'</span>&nbsp;&nbsp;<span style="color:#a83030;">L: '+dd.losses+'</span></div>';
+    if(dd&&!c.other)inner+='<div class="cal-pnl '+(dd.pnl>=0?'pos':'neg')+'">'+fmt(dd.pnl,false)+'</div><div class="cal-meta" style="display:flex;flex-direction:column;line-height:1.6;"><span style="color:#2a6e2d;">W: '+dd.wins+'</span><span style="color:#a83030;">L: '+dd.losses+'</span></div>';
     html+='<td class="'+cls.trim()+'">'+inner+'</td>';
     if(i%7===6)html+='</tr>';
   }
@@ -885,7 +937,7 @@ function updateCloudBadge(state){
   var lbl=document.getElementById('cloud-label');
   if(!dot||!lbl)return;
   if(state==='ok'){dot.style.background='var(--bull)';lbl.textContent='Synkat';}
-  else if(state==='saving'){dot.style.background='var(--gold)';lbl.textContent='Sparar…';}
+  else if(state==='saving'){dot.style.background='var(--gold)';lbl.textContent='Saving…';}
   else if(state==='err'){dot.style.background='var(--bear)';lbl.textContent='Sync-fel';}
   else{dot.style.background='var(--muted)';lbl.textContent='Ingen molnlagring';}
 }
@@ -964,8 +1016,105 @@ confirmClose=function(){
   if(t)pushToSupabase(t);
 };
 
+// ── SETTINGS ─────────────────────────────────────────────────
+function loadSettingsPage(){
+  if(craneSession){var el=document.getElementById('settings-username');if(el)el.value=craneSession.username;}
+  var buddy=getBuddyData();
+  if(buddy){
+    var bu=document.getElementById('buddy-username');var be=document.getElementById('buddy-email');
+    if(bu)bu.value=buddy.username||'';if(be)be.value=buddy.email||'';
+  }
+}
+
+function showSettingsMsg(id,text,ok){
+  var el=document.getElementById(id);if(!el)return;
+  el.textContent=text;el.style.color=ok?'var(--bull)':'var(--bear)';
+  el.style.background=ok?'var(--bull-bg)':'var(--bear-bg)';
+  el.style.border='1px solid '+(ok?'var(--bull-border)':'var(--bear-border)');
+  el.style.display='block';
+}
+
+function saveUsername(){
+  if(!craneSession)return;
+  var el=document.getElementById('settings-username');
+  var newName=el?el.value.trim():'';
+  if(!newName){showSettingsMsg('settings-username-msg','Enter a username.',false);return;}
+  var users=JSON.parse(localStorage.getItem('crane_users')||'[]');
+  var found=false;
+  for(var i=0;i<users.length;i++){if(users[i].id===craneSession.userId){users[i].username=newName;found=true;break;}}
+  if(!found){showSettingsMsg('settings-username-msg','Error: user not found.',false);return;}
+  localStorage.setItem('crane_users',JSON.stringify(users));
+  craneSession.username=newName;
+  localStorage.setItem('crane_session',JSON.stringify(craneSession));
+  showLoggedInUser(newName);
+  showSettingsMsg('settings-username-msg','✓ Username updated!',true);
+}
+
+function getBuddyData(){
+  if(!craneSession)return null;
+  var data=localStorage.getItem('crane_buddy_'+craneSession.userId);
+  return data?JSON.parse(data):null;
+}
+
+function saveBuddy(){
+  if(!craneSession)return;
+  var bu=document.getElementById('buddy-username');var be=document.getElementById('buddy-email');
+  var buddy={username:(bu?bu.value.trim():''),email:(be?be.value.trim():'')};
+  if(!buddy.username&&!buddy.email){showSettingsMsg('buddy-msg','Enter at least a username or email.',false);return;}
+  localStorage.setItem('crane_buddy_'+craneSession.userId,JSON.stringify(buddy));
+  showSettingsMsg('buddy-msg','✓ Buddy saved!',true);
+}
+
+function getTodayTrades(){
+  var today=new Date().toISOString().split('T')[0];
+  return closedTrades.filter(function(t){return(t.closeDate||t.date)===today;});
+}
+
+function formatTradesText(trades){
+  if(!trades.length)return'No closed trades today.';
+  var lines=['Dagens trades ('+new Date().toLocaleDateString('sv-SE')+'):\n'];
+  for(var i=0;i<trades.length;i++){
+    var t=trades[i];
+    lines.push((i+1)+'. '+t.ticker+' '+t.dir.toUpperCase()+' | Entry: '+t.entry+' → Exit: '+(t.exit||'?')+' | PNL: '+(t.pnl>=0?'+':'')+t.pnl+(t.notes?' | '+t.notes:''));
+  }
+  var total=0;for(var i=0;i<trades.length;i++)total+=trades[i].pnl;
+  lines.push('\nTotal PNL idag: '+(total>=0?'+':'')+Math.round(total)+' kr');
+  return lines.join('\n');
+}
+
+function sendTodayTradesEmail(){
+  var buddy=getBuddyData();
+  if(!buddy||!buddy.email){showSettingsMsg('buddy-msg','Save a buddy with an email first.',false);return;}
+  var trades=getTodayTrades();
+  var body=formatTradesText(trades);
+  var subject="Today's trades – "+(craneSession?craneSession.username:'The Migrating Crane');
+  window.location.href='mailto:'+encodeURIComponent(buddy.email)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+}
+
+function sendTodayTradesUser(){
+  var buddy=getBuddyData();
+  if(!buddy||!buddy.username){showSettingsMsg('buddy-msg','Save a buddy with a username first.',false);return;}
+  var users=JSON.parse(localStorage.getItem('crane_users')||'[]');
+  var buddyUser=null;
+  for(var i=0;i<users.length;i++){if(users[i].username===buddy.username){buddyUser=users[i];break;}}
+  if(!buddyUser){showSettingsMsg('buddy-msg','"'+buddy.username+'" is not registered in the app.',false);return;}
+  var trades=getTodayTrades();
+  var key='crane_buddy_inbox_'+buddyUser.id;
+  var inbox=JSON.parse(localStorage.getItem(key)||'[]');
+  inbox.unshift({from:craneSession?craneSession.username:'?',date:new Date().toISOString(),trades:trades});
+  localStorage.setItem(key,JSON.stringify(inbox));
+  showSettingsMsg('buddy-msg','✓ Sent to '+buddy.username+'!',true);
+}
+
 // ── AUTH ─────────────────────────────────────────────────────
 var craneSession=null;
+
+function showLoggedInUser(username){
+  var el=document.getElementById('sb-username');if(el)el.textContent=username;
+  var lb=document.getElementById('sb-logout-btn');if(lb)lb.style.display='block';
+  var tu=document.getElementById('topbar-user');if(tu)tu.style.display='block';
+  var tn=document.getElementById('topbar-username');if(tn)tn.textContent=username;
+}
 
 function hashPw(pw){
   var h=0;for(var i=0;i<pw.length;i++){h=((h<<5)-h)+pw.charCodeAt(i);h|=0;}
@@ -1001,15 +1150,14 @@ function authLogin(){
   var un=(document.getElementById('auth-login-un')||{}).value||'';
   var pw=(document.getElementById('auth-login-pw')||{}).value||'';
   un=un.trim();
-  if(!un||!pw){showAuthErr('login','Fyll i alla fält.');return;}
+  if(!un||!pw){showAuthErr('login','Please fill in all fields.');return;}
   var users=JSON.parse(localStorage.getItem('crane_users')||'[]');
   var user=null;
   for(var i=0;i<users.length;i++){if((users[i].username===un||users[i].email===un)&&users[i].passwordHash===hashPw(pw)){user=users[i];break;}}
-  if(!user){showAuthErr('login','Fel användarnamn eller lösenord.');return;}
+  if(!user){showAuthErr('login','Incorrect username or password.');return;}
   craneSession={userId:user.id,username:user.username,email:user.email};
   localStorage.setItem('crane_session',JSON.stringify(craneSession));
-  var el=document.getElementById('sb-username');if(el)el.textContent=craneSession.username;
-  var lb=document.getElementById('sb-logout-btn');if(lb)lb.style.display='block';
+  showLoggedInUser(craneSession.username);
   document.getElementById('auth-overlay').style.display='none';
   loadLocalTrades();refreshTG();
   if(SB_URL&&SB_KEY){testSupabase().then(function(ok){if(ok){updateCloudBadge('ok');loadFromSupabase();}else updateCloudBadge('err');});}
@@ -1021,33 +1169,33 @@ function authRegister(){
   var pw=(document.getElementById('auth-reg-pw')||{}).value||'';
   var pw2=(document.getElementById('auth-reg-pw2')||{}).value||'';
   un=un.trim();em=em.trim();
-  if(!un||!em||!pw){showAuthErr('reg','Fyll i alla fält.');return;}
-  if(pw!==pw2){showAuthErr('reg','Lösenorden matchar inte.');return;}
-  if(pw.length<6){showAuthErr('reg','Lösenordet måste vara minst 6 tecken.');return;}
+  if(!un||!em||!pw){showAuthErr('reg','Please fill in all fields.');return;}
+  if(pw!==pw2){showAuthErr('reg','Passwords do not match.');return;}
+  if(pw.length<6){showAuthErr('reg','Password must be at least 6 characters.');return;}
   var users=JSON.parse(localStorage.getItem('crane_users')||'[]');
   for(var i=0;i<users.length;i++){
-    if(users[i].username===un){showAuthErr('reg','Användarnamnet är redan taget.');return;}
-    if(users[i].email===em){showAuthErr('reg','E-postadressen används redan.');return;}
+    if(users[i].username===un){showAuthErr('reg','Username is already taken.');return;}
+    if(users[i].email===em){showAuthErr('reg','Email is already in use.');return;}
   }
   var user={id:Date.now().toString(),username:un,email:em,passwordHash:hashPw(pw)};
   users.push(user);
   localStorage.setItem('crane_users',JSON.stringify(users));
   craneSession={userId:user.id,username:user.username,email:user.email};
   localStorage.setItem('crane_session',JSON.stringify(craneSession));
-  var el=document.getElementById('sb-username');if(el)el.textContent=craneSession.username;
-  var lb=document.getElementById('sb-logout-btn');if(lb)lb.style.display='block';
+  showLoggedInUser(craneSession.username);
   document.getElementById('auth-overlay').style.display='none';
   refreshTG();
 }
 
 function logout(){
-  if(!confirm('Logga ut från '+( craneSession?craneSession.username:'')+'?'))return;
+  if(!confirm('Log out from '+(craneSession?craneSession.username:'')+'?'))return;
   saveLocalTrades();
   localStorage.removeItem('crane_session');
   craneSession=null;
   openTrades=[];closedTrades=[];tradeComments={};
   var el=document.getElementById('sb-username');if(el)el.textContent='est. 2026';
   var lb=document.getElementById('sb-logout-btn');if(lb)lb.style.display='none';
+  var tu=document.getElementById('topbar-user');if(tu)tu.style.display='none';
   refreshTG();
   document.getElementById('auth-overlay').style.display='flex';
 }
@@ -1059,8 +1207,7 @@ function logout(){
   if(!craneSession){
     document.getElementById('auth-overlay').style.display='flex';
   } else {
-    var el=document.getElementById('sb-username');if(el)el.textContent=craneSession.username;
-    var lb=document.getElementById('sb-logout-btn');if(lb)lb.style.display='block';
+    showLoggedInUser(craneSession.username);
     document.getElementById('auth-overlay').style.display='none';
     loadLocalTrades();refreshTG();
     if(SB_URL&&SB_KEY){testSupabase().then(function(ok){if(ok){updateCloudBadge('ok');loadFromSupabase();}else updateCloudBadge('err');});}
@@ -1102,11 +1249,11 @@ function calcEditRR(){
   var e=gn("edit-entry"),sl=gn("edit-sl"),tp=gn("edit-tp");
   var rd=document.getElementById("edit-rr-display"),rs=document.getElementById("edit-rr-sub");
   if(!rd||!rs)return;
-  if(isNaN(e)||isNaN(sl)||isNaN(tp)||sl===e){rd.textContent="\u2014";rd.className="rr-val";rs.textContent="Ange entry, SL och TP";return;}
+  if(isNaN(e)||isNaN(sl)||isNaN(tp)||sl===e){rd.textContent="\u2014";rd.className="rr-val";rs.textContent="Enter entry, SL and TP";return;}
   var rr=Math.abs(tp-e)/Math.abs(e-sl);
   rd.textContent=rr.toFixed(2)+" : 1";
   rd.className="rr-val "+(rr>=2?"good":rr>=1?"ok":"bad");
-  rs.textContent=rr>=2?"Stark setup \u2713":rr>=1?"Acceptabelt":"\u26a0 Risk > Reward";
+  rs.textContent=rr>=2?"Strong setup \u2713":rr>=1?"Acceptable":"\u26a0 Risk > Reward";
 }
 function saveEditTrade(){
   var idx=-1;
@@ -1115,13 +1262,14 @@ function saveEditTrade(){
   function gv(x){var e=document.getElementById(x);return e?e.value:"";}
   function gn(x){return parseFloat(gv(x));}
   var en=gn("edit-entry"),sz=gn("edit-size"),dt=gv("edit-date");
-  if(isNaN(en)||isNaN(sz)||!dt){alert("Fyll i entry, storlek och datum.");return;}
+  if(isNaN(en)||isNaN(sz)||!dt){alert("Enter entry, size and date.");return;}
   var sl=gn("edit-sl")||null,tp=gn("edit-tp")||null;
   var rr=null;if(sl&&tp)rr=(Math.abs(tp-en)/Math.abs(en-sl)).toFixed(2);
   var t=openTrades[idx];
+  saveUndoState();
   openTrades[idx]={id:t.id,ticker:gv("edit-ticker")||t.ticker,entry:en,size:sz,
     dir:editDir,sl:sl,tp:tp,rr:rr,date:dt,notes:gv("edit-notes"),img:t.img||null};
-  closeEditModal();refreshTG();
+  closeEditModal();refreshTG();showUndoToast('Trade updated.');
 }
 function openEditClosedModal(id){
   editingClosedId=id;
@@ -1143,16 +1291,60 @@ function saveEditClosed(){
   function gv(x){var e=document.getElementById(x);return e?e.value:"";}
   function gn(x){return parseFloat(gv(x));}
   var en=gn("ec-entry"),ex=gn("ec-exit"),sz=gn("ec-size");
-  if(isNaN(en)||isNaN(sz)){alert("Fyll i entry och storlek.");return;}
+  if(isNaN(en)||isNaN(sz)){alert("Enter entry and size.");return;}
   var sl=gn("ec-sl")||null,tp=gn("ec-tp")||null;
   var rr=null;if(sl&&tp)rr=(Math.abs(tp-en)/Math.abs(en-sl)).toFixed(2);
   var t=closedTrades[idx];
   var manualPnl=gv("ec-pnl").trim()!==''?gn("ec-pnl"):NaN;
   var pnl=!isNaN(manualPnl)?manualPnl:(!isNaN(ex)?(editClosedDir==="long"?(ex-en)*sz:(en-ex)*sz):t.pnl);
+  saveUndoState();
   closedTrades[idx]={id:t.id,ticker:t.ticker,dir:editClosedDir,entry:en,exit:!isNaN(ex)?ex:t.exit||null,size:sz,
     sl:sl,tp:tp,rr:rr,pnl:pnl,date:t.date,closeDate:gv("ec-date")||t.closeDate||t.date,
     notes:gv("ec-notes"),img:t.img||null};
-  closeEditClosedModal();refreshTG();
+  closeEditClosedModal();refreshTG();showUndoToast('Trade updated.');
+}
+
+// ── UNDO ─────────────────────────────────────────────────────
+var undoState=null,undoTimer=null;
+
+function saveUndoState(){
+  undoState={open:JSON.parse(JSON.stringify(openTrades)),closed:JSON.parse(JSON.stringify(closedTrades)),comments:JSON.parse(JSON.stringify(tradeComments))};
+}
+
+function showUndoToast(msg){
+  var t=document.getElementById('undo-toast');
+  var m=document.getElementById('undo-toast-msg');
+  if(m)m.textContent=msg||'Changes saved.';
+  if(t){t.style.display='flex';}
+  if(undoTimer)clearTimeout(undoTimer);
+  undoTimer=setTimeout(hideUndoToast,8000);
+}
+
+function hideUndoToast(){
+  var t=document.getElementById('undo-toast');if(t)t.style.display='none';
+  if(undoTimer){clearTimeout(undoTimer);undoTimer=null;}
+}
+
+function undoLastAction(){
+  if(!undoState)return;
+  openTrades=undoState.open;closedTrades=undoState.closed;tradeComments=undoState.comments;
+  undoState=null;hideUndoToast();refreshTG();
+}
+
+function deleteOpenTrade(){
+  if(!confirm('Permanently delete this trade?'))return;
+  saveUndoState();
+  var idx=-1;for(var i=0;i<openTrades.length;i++){if(openTrades[i].id===editingOpenId){idx=i;break;}}
+  if(idx>-1)openTrades.splice(idx,1);
+  closeEditModal();refreshTG();showUndoToast('Trade deleted.');
+}
+
+function deleteClosedTrade(){
+  if(!confirm('Permanently delete this trade?'))return;
+  saveUndoState();
+  var idx=-1;for(var i=0;i<closedTrades.length;i++){if(String(closedTrades[i].id)===String(editingClosedId)){idx=i;break;}}
+  if(idx>-1)closedTrades.splice(idx,1);
+  closeEditClosedModal();refreshTG();showUndoToast('Trade deleted.');
 }
 
 </script>
@@ -1203,9 +1395,9 @@ function saveEditClosed(){
 <!-- EDIT OPEN TRADE MODAL -->
 <div class="modal-overlay" id="edit-open-modal" onclick="if(event.target===this)closeEditModal()">
 <div class="modal">
-  <div class="modal-head"><div class="modal-title">Redigera trade</div><div class="modal-sub">&#196;ndra detaljer f&#246;r den &#246;ppna traden</div></div>
+  <div class="modal-head"><div class="modal-title">Edit trade</div><div class="modal-sub">Change details for the open trade</div></div>
   <div class="modal-body">
-    <div class="fsect">Riktning</div>
+    <div class="fsect">Direction</div>
     <div class="dir-toggle">
       <div class="dir-btn long active" id="edit-dir-long" onclick="setEditDir('long')">&#9650; LONG</div>
       <div class="dir-btn short" id="edit-dir-short" onclick="setEditDir('short')">&#9660; SHORT</div>
@@ -1214,24 +1406,27 @@ function saveEditClosed(){
     <div class="fsect">Trade-detaljer</div>
     <div class="fgrid">
       <div><label class="fl">Instrument</label><select class="fi" id="edit-ticker" style="cursor:pointer;"><option value="GBPUSD">GBP/USD</option></select></div>
-      <div><label class="fl">Datum</label><input class="fi" type="date" id="edit-date"></div>
-      <div><label class="fl">Entry-pris</label><input class="fi" type="number" id="edit-entry" placeholder="1.2500" step="any" oninput="calcEditRR()"></div>
-      <div><label class="fl">Storlek (lots)</label><input class="fi" type="number" id="edit-size" placeholder="0.10" step="any"></div>
+      <div><label class="fl">Date</label><input class="fi" type="date" id="edit-date"></div>
+      <div><label class="fl">Entry price</label><input class="fi" type="number" id="edit-entry" placeholder="1.2500" step="any" oninput="calcEditRR()"></div>
+      <div><label class="fl">Size (lots)</label><input class="fi" type="number" id="edit-size" placeholder="0.10" step="any"></div>
     </div>
     <div class="divider"></div>
-    <div class="fsect">Projektion</div>
+    <div class="fsect">Projection</div>
     <div class="fgrid">
       <div><label class="fl" style="color:#a83030;">&#9660; Stop Loss (SL)</label><input class="fi sl-f" type="number" id="edit-sl" placeholder="1.2450" step="any" oninput="calcEditRR()"></div>
       <div><label class="fl" style="color:#2a6e2d;">&#9650; Take Profit (TP)</label><input class="fi tp-f" type="number" id="edit-tp" placeholder="1.2600" step="any" oninput="calcEditRR()"></div>
     </div>
-    <div class="rr-box"><div><div class="rr-lbl">Risk / Reward</div><div class="rr-val" id="edit-rr-display">&#8212;</div><div class="rr-sub" id="edit-rr-sub">Ange entry, SL och TP</div></div><div style="font-size:32px;opacity:.15;">&#127919;</div></div>
+    <div class="rr-box"><div><div class="rr-lbl">Risk / Reward</div><div class="rr-val" id="edit-rr-display">&#8212;</div><div class="rr-sub" id="edit-rr-sub">Enter entry, SL and TP</div></div><div style="font-size:32px;opacity:.15;">&#127919;</div></div>
     <div class="divider"></div>
-    <div class="fsect">Anteckningar</div>
-    <input class="fi" id="edit-notes" placeholder="Setup, tankar&#8230;" style="width:100%;">
+    <div class="fsect">Notes</div>
+    <input class="fi" id="edit-notes" placeholder="Setup, thoughts&#8230;" style="width:100%;">
   </div>
-  <div class="modal-foot">
-    <button class="btn-cancel" onclick="closeEditModal()">Avbryt</button>
-    <button class="btn-save" onclick="saveEditTrade()">Spara &#228;ndringar</button>
+  <div class="modal-foot" style="justify-content:space-between;">
+    <button class="btn-danger" onclick="deleteOpenTrade()">&#128465; Delete</button>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEditTrade()">Save changes</button>
+    </div>
   </div>
 </div>
 </div>
@@ -1239,9 +1434,9 @@ function saveEditClosed(){
 <!-- EDIT CLOSED TRADE MODAL -->
 <div class="modal-overlay" id="edit-closed-modal" onclick="if(event.target===this)closeEditClosedModal()">
 <div class="modal">
-  <div class="modal-head"><div class="modal-title">Redigera st&#228;ngd trade</div><div class="modal-sub">&#196;ndra detaljer f&#246;r den st&#228;ngda traden</div></div>
+  <div class="modal-head"><div class="modal-title">Edit closed trade</div><div class="modal-sub">Change details for the closed trade</div></div>
   <div class="modal-body">
-    <div class="fsect">Riktning</div>
+    <div class="fsect">Direction</div>
     <div class="dir-toggle">
       <div class="dir-btn long active" id="ec-dir-long" onclick="setEditClosedDir('long')">&#9650; LONG</div>
       <div class="dir-btn short" id="ec-dir-short" onclick="setEditClosedDir('short')">&#9660; SHORT</div>
@@ -1252,19 +1447,29 @@ function saveEditClosed(){
       <div><label class="fl">Exit-pris</label><input class="fi" type="number" id="ec-exit" placeholder="1.2600" step="any"></div>
       <div><label class="fl" style="color:#a83030;">Stop Loss (SL)</label><input class="fi sl-f" type="number" id="ec-sl" placeholder="1.2450" step="any"></div>
       <div><label class="fl" style="color:#2a6e2d;">Take Profit (TP)</label><input class="fi tp-f" type="number" id="ec-tp" placeholder="1.2600" step="any"></div>
-      <div><label class="fl">Storlek (lots)</label><input class="fi" type="number" id="ec-size" step="any"></div>
-      <div><label class="fl">Datum</label><input class="fi" type="date" id="ec-date"></div>
-      <div><label class="fl">Faktiskt PNL</label><input class="fi" type="number" id="ec-pnl" placeholder="0.00 (valfritt)" step="any"></div>
+      <div><label class="fl">Size (lots)</label><input class="fi" type="number" id="ec-size" step="any"></div>
+      <div><label class="fl">Date</label><input class="fi" type="date" id="ec-date"></div>
+      <div><label class="fl">Actual PNL</label><input class="fi" type="number" id="ec-pnl" placeholder="0.00 (optional)" step="any"></div>
     </div>
     <div class="divider"></div>
-    <div class="fsect">Anteckningar</div>
-    <input class="fi" id="ec-notes" placeholder="Setup, tankar&#8230;" style="width:100%;">
+    <div class="fsect">Notes</div>
+    <input class="fi" id="ec-notes" placeholder="Setup, thoughts&#8230;" style="width:100%;">
   </div>
-  <div class="modal-foot">
-    <button class="btn-cancel" onclick="closeEditClosedModal()">Avbryt</button>
-    <button class="btn-save" onclick="saveEditClosed()">Spara &#228;ndringar</button>
+  <div class="modal-foot" style="justify-content:space-between;">
+    <button class="btn-danger" onclick="deleteClosedTrade()">&#128465; Delete</button>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-cancel" onclick="closeEditClosedModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEditClosed()">Save changes</button>
+    </div>
   </div>
 </div>
+</div>
+
+<!-- UNDO TOAST -->
+<div id="undo-toast" style="position:fixed;bottom:68px;left:50%;transform:translateX(-50%);background:var(--pine);color:var(--cream);padding:11px 18px;border-radius:10px;display:none;align-items:center;gap:14px;z-index:500;font-size:11px;font-family:'DM Mono',monospace;box-shadow:0 4px 24px rgba(0,0,0,.22);white-space:nowrap;">
+  <span id="undo-toast-msg">Changes saved.</span>
+  <button onclick="undoLastAction()" style="background:rgba(255,255,255,.18);border:none;color:white;padding:5px 14px;border-radius:6px;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.03em;">&#8617; Undo</button>
+  <button onclick="hideUndoToast()" style="background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:14px;padding:0 2px;line-height:1;">&#10005;</button>
 </div>
 
 <!-- AUTH OVERLAY -->
@@ -1274,28 +1479,28 @@ function saveEditClosed(){
   <div class="auth-title">The Migrating Crane</div>
   <div class="auth-sub">Trading Ground</div>
   <div class="auth-tabs">
-    <div class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Logga in</div>
-    <div class="auth-tab" id="auth-tab-reg" onclick="switchAuthTab('reg')">Registrera</div>
+    <div class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Log in</div>
+    <div class="auth-tab" id="auth-tab-reg" onclick="switchAuthTab('reg')">Register</div>
   </div>
   <div id="auth-login-form">
     <div id="auth-login-err" class="auth-err"></div>
-    <label class="fl">Användarnamn eller e-post</label>
-    <input class="fi" id="auth-login-un" type="text" placeholder="ditt_namn" style="margin-bottom:12px;width:100%;">
-    <label class="fl">Lösenord</label>
+    <label class="fl">Username or email</label>
+    <input class="fi" id="auth-login-un" type="text" placeholder="your_name" style="margin-bottom:12px;width:100%;">
+    <label class="fl">Password</label>
     <input class="fi" id="auth-login-pw" type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" style="margin-bottom:16px;width:100%;" onkeydown="if(event.key==='Enter')authLogin()">
-    <button class="auth-btn" onclick="authLogin()">Logga in</button>
+    <button class="auth-btn" onclick="authLogin()">Log in</button>
   </div>
   <div id="auth-reg-form" style="display:none;">
     <div id="auth-reg-err" class="auth-err"></div>
-    <label class="fl">Användarnamn</label>
-    <input class="fi" id="auth-reg-un" type="text" placeholder="ditt_namn" style="margin-bottom:12px;width:100%;">
-    <label class="fl">E-post</label>
-    <input class="fi" id="auth-reg-email" type="email" placeholder="du@email.com" style="margin-bottom:12px;width:100%;">
-    <label class="fl">Lösenord</label>
+    <label class="fl">Username</label>
+    <input class="fi" id="auth-reg-un" type="text" placeholder="your_name" style="margin-bottom:12px;width:100%;">
+    <label class="fl">Email</label>
+    <input class="fi" id="auth-reg-email" type="email" placeholder="you@email.com" style="margin-bottom:12px;width:100%;">
+    <label class="fl">Password</label>
     <input class="fi" id="auth-reg-pw" type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" style="margin-bottom:12px;width:100%;">
-    <label class="fl">Bekräfta lösenord</label>
+    <label class="fl">Confirm password</label>
     <input class="fi" id="auth-reg-pw2" type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" style="margin-bottom:16px;width:100%;" onkeydown="if(event.key==='Enter')authRegister()">
-    <button class="auth-btn" onclick="authRegister()">Skapa konto</button>
+    <button class="auth-btn" onclick="authRegister()">Create account</button>
   </div>
 </div>
 </div>
