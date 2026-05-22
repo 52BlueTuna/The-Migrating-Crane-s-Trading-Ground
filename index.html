@@ -312,11 +312,24 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
         <div class="mig-top">
           <div class="mig-stat"><div class="mig-stat-label">Win rate</div><div class="mig-stat-val" id="mig-wr">0%</div><div class="mig-stat-sub" id="mig-wl">0 wins &middot; 0 losses</div></div>
           <div class="mig-stat"><div class="mig-stat-label">Total trades</div><div class="mig-stat-val" id="mig-total">0</div><div class="mig-stat-sub" id="mig-oc">0 open &middot; 0 closed</div></div>
-          <div class="mig-stat"><div class="mig-stat-label">Ins&#228;ttning</div><div class="mig-stat-val" id="mig-dep">0 kr</div><div class="mig-stat-sub"><span style="cursor:pointer;color:var(--pine);text-decoration:underline;" onclick="editDeposit()">&#196;ndra</span></div></div>
+          <div class="mig-stat">
+            <div class="mig-stat-label">Balance</div>
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+              <div>
+                <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Starting</div>
+                <div class="mig-stat-val" id="mig-dep">0</div>
+              </div>
+              <div style="font-size:22px;color:var(--muted);align-self:flex-end;margin-bottom:4px;">→</div>
+              <div>
+                <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Current</div>
+                <div class="mig-stat-val" id="mig-cb">0</div>
+              </div>
+            </div>
+            <div class="mig-stat-sub"><span style="cursor:pointer;color:var(--pine);text-decoration:underline;" onclick="openBalanceModal()">Edit</span></div>
+          </div>
         </div>
         <div class="mig-top2">
-          <div class="mig-stat"><div class="mig-stat-label">Starting P&amp;L</div><div class="mig-stat-val" id="mig-sp">+0 kr</div><div class="mig-stat-sub">first trade baseline</div></div>
-          <div class="mig-stat"><div class="mig-stat-label">Current P&amp;L</div><div class="mig-stat-val" id="mig-cp">+0 kr</div><div class="mig-stat-sub" id="mig-cs">cumulative</div></div>
+          <div class="mig-stat"><div class="mig-stat-label">Current P&amp;L</div><div class="mig-stat-val" id="mig-cp">+0</div><div class="mig-stat-sub" id="mig-cs">cumulative</div></div>
           <div class="mig-stat" style="display:flex;align-items:center;">
             <div style="flex:1;"><div class="mig-stat-label" style="margin-bottom:14px;">Long vs Short</div>
               <div class="ls-wrap">
@@ -385,14 +398,26 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
         </div>
 
         <div class="panel">
-          <div class="ph"><span class="pt">&#9729; Molnlagring (Supabase)</span></div>
+          <div class="ph"><span class="pt">&#128190; Data &amp; backup</span></div>
           <div class="pb">
-            <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:16px;">Save your trades in the cloud so they persist across sessions and devices.</p>
+            <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px;">Export your trades as a JSON file to back up or move to another device. Import to restore.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="log-btn" onclick="exportData()">&#11015; Export data</button>
+              <button class="log-btn" style="background:var(--parch2);color:var(--pine);border:1px solid var(--border);" onclick="document.getElementById('import-file').click()">&#11014; Import data</button>
+              <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="ph"><span class="pt">&#9729; Cloud sync (Supabase)</span></div>
+          <div class="pb">
+            <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:16px;">Connect a free <a href="https://supabase.com" target="_blank" style="color:var(--pine);">Supabase</a> project to sync trades across all your devices automatically.</p>
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
               <div id="settings-cloud-dot" style="width:10px;height:10px;border-radius:50%;background:var(--muted);"></div>
-              <span id="settings-cloud-label" style="font-size:12px;color:var(--muted);">Inte ansluten</span>
+              <span id="settings-cloud-label" style="font-size:12px;color:var(--muted);">Not connected</span>
             </div>
-            <button class="log-btn" onclick="openSupabaseModal()">&#9881; Konfigurera Supabase</button>
+            <button class="log-btn" onclick="openSupabaseModal()">&#9881; Configure Supabase</button>
           </div>
         </div>
 
@@ -451,7 +476,7 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
 
     <div class="fsect">Exit <span style="font-weight:400;font-style:italic;text-transform:none;letter-spacing:0;font-size:10px;color:var(--muted);">(optional &#8212; leave blank for open trade)</span></div>
     <div class="fgrid">
-      <div><label class="fl">Exit price</label><input class="fi" type="number" id="f-exit" placeholder="0.00 (optional)" step="any" oninput="calcLogPnl()"></div>
+      <div><label class="fl">Exit price</label><input class="fi" type="number" id="f-exit" placeholder="0.00 (optional)" step="any" oninput="calcLogPnl();calcRR()"></div>
       <div><label class="fl">Actual PNL</label><input class="fi" type="number" id="f-pnl" placeholder="0.00 (optional)" step="any"></div>
       <div><label class="fl">Notes</label><input class="fi" id="f-notes" placeholder="Setup, thoughts&#8230;"></div>
     </div>
@@ -530,6 +555,46 @@ body{font-family:"DM Mono",monospace;background:var(--parch);color:#2c2c2a;min-h
 </div>
 </div>
 
+<!-- OPEN TRADE BUDDY PREVIEW MODAL -->
+<div class="modal-overlay" id="trade-preview-modal" onclick="if(event.target===this)closeTradePreview()">
+<div class="modal buddy-modal">
+  <div class="bv-topbar">
+    <div>
+      <div class="bv-title" id="tp-title">Trade preview</div>
+      <div class="bv-subtitle">As your buddy sees it</div>
+    </div>
+    <div class="bv-readonly">Open</div>
+  </div>
+  <div class="bv-trades" id="tp-body" style="padding-bottom:4px;"></div>
+  <div style="padding:14px 22px 18px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;gap:10px;">
+      <button class="log-btn" onclick="sendTradePreviewToBuddy()" style="font-size:11px;padding:7px 16px;">&#9993; Send to buddy</button>
+      <button class="log-btn" onclick="saveTradeSnapshot()" style="background:var(--parch2);color:var(--pine);border:1px solid var(--border);font-size:11px;padding:7px 16px;">&#128190; Save snapshot</button>
+    </div>
+    <button class="btn-cancel" onclick="closeTradePreview()">Close</button>
+  </div>
+</div>
+</div>
+
+<!-- BALANCE MODAL -->
+<div class="modal-overlay" id="balance-modal" onclick="if(event.target===this)closeBalanceModal()">
+<div class="modal" style="max-width:340px;">
+  <div class="modal-head"><div class="modal-title">Edit balance</div><div class="modal-sub">Set or add to your starting balance</div></div>
+  <div class="modal-body">
+    <div class="dir-toggle" style="margin-bottom:18px;">
+      <div class="dir-btn long active" id="bal-set-btn" onclick="setBalMode('set')">Set new balance</div>
+      <div class="dir-btn short" id="bal-add-btn" onclick="setBalMode('add')">Add amount</div>
+    </div>
+    <label class="fl" id="bal-input-lbl">New starting balance</label>
+    <input class="fi" type="number" id="bal-amount" placeholder="10000" step="any" style="width:100%;margin-top:6px;" onkeydown="if(event.key==='Enter')confirmBalance()">
+  </div>
+  <div class="modal-foot">
+    <button class="btn-cancel" onclick="closeBalanceModal()">Cancel</button>
+    <button class="btn-save" onclick="confirmBalance()">Confirm</button>
+  </div>
+</div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 
@@ -564,10 +629,31 @@ function fmt(n,kr){
   return(n>=0?'+':'-')+s+(kr?' kr':'');
 }
 
-function editDeposit(){
-  var v=prompt('Enter deposit (kr):',deposit||'');
-  if(v!==null&&!isNaN(parseFloat(v))){deposit=parseFloat(v);updateMigration();saveLocalTrades();}
+var _balMode='set';
+function openBalanceModal(){
+  _balMode='set';setBalMode('set');
+  var el=document.getElementById('bal-amount');if(el)el.value=deposit||'';
+  var m=document.getElementById('balance-modal');if(m)m.classList.add('open');
+  setTimeout(function(){var el=document.getElementById('bal-amount');if(el)el.focus();},120);
 }
+function closeBalanceModal(){var m=document.getElementById('balance-modal');if(m)m.classList.remove('open');}
+function setBalMode(mode){
+  _balMode=mode;
+  var sb=document.getElementById('bal-set-btn'),ab=document.getElementById('bal-add-btn');
+  var lbl=document.getElementById('bal-input-lbl');
+  if(sb)sb.className='dir-btn long'+(mode==='set'?' active':'');
+  if(ab)ab.className='dir-btn short'+(mode==='add'?' active':'');
+  if(lbl)lbl.textContent=mode==='set'?'New starting balance':'Amount to add';
+  var el=document.getElementById('bal-amount');if(el)el.value='';
+}
+function confirmBalance(){
+  var v=parseFloat(document.getElementById('bal-amount').value);
+  if(isNaN(v)||v<0){alert('Enter a valid amount.');return;}
+  if(_balMode==='add')deposit=(deposit||0)+v;
+  else deposit=v;
+  closeBalanceModal();updateMigration();saveLocalTrades();
+}
+function editDeposit(){openBalanceModal();}
 
 function handleTradeImage(e){
   var file=e.target.files[0];if(!file)return;
@@ -604,7 +690,7 @@ function openLogModal(){
   var fd=document.getElementById('f-date');if(fd)fd.value=new Date().toISOString().split('T')[0];
   setDir('long');
   var rd=document.getElementById('rr-display');if(rd){rd.textContent='\u2014';rd.className='rr-val';}
-  var rs=document.getElementById('rr-sub');if(rs)rs.textContent='Ange entry, SL och TP f\u00f6r att ber\u00e4kna';
+  var rs=document.getElementById('rr-sub');if(rs)rs.textContent='Enter entry and SL to calculate';
   var lm=document.getElementById('log-modal');if(lm)lm.classList.add('open');
 }
 
@@ -622,21 +708,32 @@ function setDir(d){
 }
 
 function calcRR(){
-  var eEl=document.getElementById('f-entry');
-  var slEl=document.getElementById('f-sl');
-  var tpEl=document.getElementById('f-tp');
+  var e=parseFloat((document.getElementById('f-entry')||{}).value);
+  var sl=parseFloat((document.getElementById('f-sl')||{}).value);
+  var tp=parseFloat((document.getElementById('f-tp')||{}).value);
+  var exit=parseFloat((document.getElementById('f-exit')||{}).value);
   var rd=document.getElementById('rr-display');
   var rs=document.getElementById('rr-sub');
-  if(!eEl||!slEl||!tpEl||!rd||!rs)return;
-  var e=parseFloat(eEl.value),sl=parseFloat(slEl.value),tp=parseFloat(tpEl.value);
-  if(isNaN(e)||isNaN(sl)||isNaN(tp)||sl===e){
+  if(!rd||!rs)return;
+  if(isNaN(e)||isNaN(sl)||sl===e){
     rd.textContent='\u2014';rd.className='rr-val';
-    rs.textContent='Enter entry, SL and TP to calculate';return;
+    rs.textContent='Enter entry and SL to calculate';return;
   }
-  var rr=Math.abs(tp-e)/Math.abs(e-sl);
+  var risk=Math.abs(e-sl);
+  var rr,label;
+  if(!isNaN(exit)){
+    rr=(currentDir==='long'?(exit-e):(e-exit))/risk;
+    label='Actual R (based on exit)';
+  } else if(!isNaN(tp)){
+    rr=Math.abs(tp-e)/risk;
+    label='Planned R (based on TP)';
+  } else {
+    rd.textContent='\u2014';rd.className='rr-val';
+    rs.textContent='Enter TP or exit price to calculate';return;
+  }
   rd.textContent=rr.toFixed(2)+' : 1';
-  rd.className='rr-val '+(rr>=2?'good':rr>=1?'ok':'bad');
-  rs.textContent=rr>=2?'Strong setup \u2713':rr>=1?'Acceptable':'\u26a0 Risk exceeds reward';
+  rd.className='rr-val '+(rr>=2?'good':rr>=1?'ok':rr>0?'bad':'bad');
+  rs.textContent=label+(rr>=2?' \u2713 Strong':rr>=1?' \u2713 Good':rr>0?' \u26a0 Low reward':' \u26a0 Loss');
 }
 
 function saveTrade(){
@@ -657,8 +754,14 @@ function saveTrade(){
   var sl=slEl&&slEl.value?parseFloat(slEl.value)||null:null;
   var tp=tpEl&&tpEl.value?parseFloat(tpEl.value)||null:null;
   var notes=notesEl?notesEl.value:'';
-  var rr=null;if(sl&&tp)rr=(Math.abs(tp-entry)/Math.abs(entry-sl)).toFixed(2);
   var exitVal=exitEl&&exitEl.value.trim()!==''?parseFloat(exitEl.value):NaN;
+  var rr=null;
+  if(sl&&!isNaN(exitVal)){
+    var actualR=(currentDir==='long'?(exitVal-entry):(entry-exitVal))/Math.abs(entry-sl);
+    rr=actualR.toFixed(2);
+  } else if(sl&&tp){
+    rr=(Math.abs(tp-entry)/Math.abs(entry-sl)).toFixed(2);
+  }
   var pnlEl=document.getElementById('f-pnl');
   var manualPnl=pnlEl&&pnlEl.value.trim()!==''?parseFloat(pnlEl.value):NaN;
   if(!isNaN(exitVal)||!isNaN(manualPnl)){
@@ -742,7 +845,7 @@ function refreshTG(){
         html+='<div class="oc-body">';
         var flds=[['ENTRY',t.entry],['SIZE',t.size],['SL',t.sl||'\u2014'],['TP',t.tp||'\u2014'],['R:R',t.rr?t.rr+':1':'\u2014']];
         for(var j=0;j<flds.length;j++)html+='<div><div style="font-size:9px;color:var(--muted);margin-bottom:2px;">'+flds[j][0]+'</div><div style="font-size:11px;font-weight:500;">'+flds[j][1]+'</div></div>';
-        html+='<div class="oc-foot"><span class="tag-open">OPEN</span><div style="display:flex;gap:6px;"><button onclick="openEditModal('+t.id+')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--parch2);color:var(--pine);font-family:DM Mono,monospace;font-size:10px;cursor:pointer;">&#9998; Edit</button><button class="btn-close-trade" onclick="openCloseModal('+t.id+')">&#10005; Close</button></div></div>';
+        html+='<div class="oc-foot"><span class="tag-open">OPEN</span><div style="display:flex;gap:6px;"><button onclick="openEditModal('+t.id+')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--parch2);color:var(--pine);font-family:DM Mono,monospace;font-size:10px;cursor:pointer;">&#9998; Edit</button><button onclick="openTradePreview('+t.id+')" style="padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--parch2);color:var(--pine);font-family:DM Mono,monospace;font-size:10px;cursor:pointer;">&#128100; Buddy</button><button class="btn-close-trade" onclick="openCloseModal('+t.id+')">&#10005; Close</button></div></div>';
       }
       ob.innerHTML=html;
     } else {ob.innerHTML='<div class="empty">No open positions</div>';}
@@ -763,7 +866,7 @@ function refreshTG(){
       for(var i=0;i<cf.length;i++){
         var t=cf[i];
         var imgs='';if(t.img)imgs+='<img src="'+t.img+'" onclick="showImgModal(\''+t.id+'\',1)" style="height:32px;border-radius:4px;cursor:pointer;object-fit:cover;margin-right:3px;" title="Image 1">';if(t.img2)imgs+='<img src="'+t.img2+'" onclick="showImgModal(\''+t.id+'\',2)" style="height:32px;border-radius:4px;cursor:pointer;object-fit:cover;" title="Image 2">';
-        html+='<tr><td style="color:var(--muted);font-size:10px;">'+(t.closeDate||t.date)+'</td><td style="font-weight:500;color:var(--pine);">'+t.ticker+'</td><td><span class="badge '+t.dir+'">'+t.dir.toUpperCase()+'</span></td><td>'+t.entry+'</td><td>'+(t.exit||'\u2014')+'</td><td>'+(t.sl||'\u2014')+'</td><td>'+(t.tp||'\u2014')+'</td><td>'+(t.rr?t.rr+':1':'\u2014')+'</td><td class="'+(t.pnl>=0?'ppos':'pneg')+'">'+fmt(t.pnl)+'</td><td>'+(imgs||'\u2014')+'</td><td><button onclick="openEditClosedModal('+t.id+')" style="padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--parch2);color:var(--pine);font-family:DM Mono,monospace;font-size:10px;cursor:pointer;">&#9998;</button></td></tr>';
+        html+='<tr><td style="color:var(--muted);font-size:10px;">'+(t.closeDate||t.date)+'</td><td style="font-weight:500;color:var(--pine);">'+t.ticker+'</td><td><span class="badge '+t.dir+'">'+t.dir.toUpperCase()+'</span></td><td>'+t.entry+'</td><td>'+(t.exit||'\u2014')+'</td><td>'+(t.sl||'\u2014')+'</td><td>'+(t.tp||'\u2014')+'</td><td>'+(t.rr?t.rr+':1':'\u2014')+'</td><td class="'+(t.pnl>=0?'ppos':'pneg')+'">'+fmt(t.pnl)+'</td><td>'+(imgs||'\u2014')+'</td><td style="display:flex;gap:4px;"><button onclick="openEditClosedModal('+t.id+')" style="padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--parch2);color:var(--pine);font-family:DM Mono,monospace;font-size:10px;cursor:pointer;">&#9998;</button><button onclick="openClosedTradePreview('+t.id+')" style="padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--parch2);color:var(--pine);font-family:DM Mono,monospace;font-size:10px;cursor:pointer;">&#128100;</button></td></tr>';
       }
       cb.innerHTML=html;
     } else {cb.innerHTML='<tr><td colspan="11"><div class="empty">No closed trades for this day</div></td></tr>';}
@@ -874,6 +977,161 @@ function previewOneTrade(id){
 function openBuddyView(){var bm=document.getElementById('buddy-modal');if(bm)bm.classList.add('open');renderBuddyView();}
 function closeBuddyView(){var bm=document.getElementById('buddy-modal');if(bm)bm.classList.remove('open');}
 
+var _previewTradeId=null;
+function openTradePreview(id){
+  _previewTradeId=id;
+  var t=null;for(var i=0;i<openTrades.length;i++){if(openTrades[i].id===id){t=openTrades[i];break;}}
+  if(!t)return;
+  var tl=document.getElementById('tp-title');if(tl)tl.textContent=t.ticker+' — '+t.dir.toUpperCase();
+  var body=document.getElementById('tp-body');if(!body)return;
+  var pc=typeof t.pnl!=='undefined'&&t.pnl!==null?(t.pnl>=0?'pos':'neg'):'';
+  var html='<div class="bv-trade-card">';
+  html+='<div class="bv-trade-head"><span style="font-weight:500;color:var(--pine);font-size:13px;">'+t.ticker+' <span class="badge '+t.dir+'">'+t.dir.toUpperCase()+'</span></span><span style="font-size:11px;color:var(--muted);">'+t.date+'</span></div>';
+  html+='<div class="bv-trade-details">';
+  var dets=[['Entry',t.entry],['Size',t.size],['TP',t.tp||'—'],['SL',t.sl||'—'],['R:R',t.rr?t.rr+':1':'—']];
+  for(var j=0;j<dets.length;j++)html+='<div class="bv-detail"><div class="bv-detail-lbl">'+dets[j][0]+'</div><div class="bv-detail-val">'+dets[j][1]+'</div></div>';
+  html+='</div>';
+  if(t.notes)html+='<div style="padding:10px 14px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);">'+t.notes+'</div>';
+  if(t.img||t.img2){html+='<div style="padding:10px 14px;display:flex;gap:8px;border-top:1px solid var(--border);">';if(t.img)html+='<img src="'+t.img+'" style="height:60px;border-radius:6px;object-fit:cover;">';if(t.img2)html+='<img src="'+t.img2+'" style="height:60px;border-radius:6px;object-fit:cover;">';html+='</div>';}
+  html+='</div>';
+  body.innerHTML=html;
+  var m=document.getElementById('trade-preview-modal');if(m)m.classList.add('open');
+}
+function closeTradePreview(){var m=document.getElementById('trade-preview-modal');if(m)m.classList.remove('open');}
+function sendTradePreviewToBuddy(){
+  var t=null;for(var i=0;i<openTrades.length;i++){if(openTrades[i].id===_previewTradeId){t=openTrades[i];break;}}
+  if(!t)return;
+  var buddy=getBuddyData();
+  if(!buddy||!buddy.email){alert('Save a buddy email in Settings first.');return;}
+  var body=t.ticker+' '+t.dir.toUpperCase()+'\n'+'Entry: '+t.entry+' | Size: '+t.size+'\nTP: '+(t.tp||'—')+' | SL: '+(t.sl||'—')+' | R:R: '+(t.rr?t.rr+':1':'—')+(t.notes?'\n\nNotes: '+t.notes:'');
+  window.location.href='mailto:'+encodeURIComponent(buddy.email)+'?subject='+encodeURIComponent('Open trade — '+t.ticker+' ('+t.dir.toUpperCase()+')')+'&body='+encodeURIComponent(body);
+}
+function saveTradeSnapshot(){
+  var t=null;for(var i=0;i<openTrades.length;i++){if(openTrades[i].id===_previewTradeId){t=openTrades[i];break;}}
+  if(!t)return;
+  var snap={ticker:t.ticker,direction:t.dir,entry:t.entry,size:t.size,tp:t.tp||null,sl:t.sl||null,rr:t.rr||null,date:t.date,notes:t.notes||'',snapshotAt:new Date().toISOString()};
+  var blob=new Blob([JSON.stringify(snap,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='snapshot-'+t.ticker+'-'+t.date+'.json';a.click();URL.revokeObjectURL(a.href);
+}
+
+var _previewClosedId=null;
+function openClosedTradePreview(id){
+  _previewClosedId=id;
+  var clicked=null;for(var i=0;i<closedTrades.length;i++){if(String(closedTrades[i].id)===String(id)){clicked=closedTrades[i];break;}}
+  if(!clicked)return;
+  var dayKey=clicked.closeDate||clicked.date;
+  var dayTrades=closedTrades.filter(function(t){return (t.closeDate||t.date)===dayKey;});
+  var tl=document.getElementById('tp-title');if(tl)tl.textContent='Trades — '+dayKey;
+  var ro=document.querySelector('#trade-preview-modal .bv-readonly');if(ro)ro.textContent=dayTrades.length+' trade'+(dayTrades.length!==1?'s':'');
+  var body=document.getElementById('tp-body');if(!body)return;
+  var html='';
+  for(var i=0;i<dayTrades.length;i++){
+    var t=dayTrades[i];var pc=t.pnl>=0?'pos':'neg';var wl=t.pnl>=0?'W':'L';var wlc=t.pnl>=0?'var(--bull)':'var(--bear)';
+    var checked=String(t.id)===String(id)?'checked':'';
+    html+='<div class="bv-trade-card" style="margin-bottom:10px;">';
+    html+='<div class="bv-trade-head" style="cursor:pointer;" onclick="this.querySelector(\'input\').click()">';
+    html+='<label style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="event.stopPropagation()">';
+    html+='<input type="checkbox" id="tp-chk-'+t.id+'" '+checked+' style="width:15px;height:15px;cursor:pointer;accent-color:var(--pine);">';
+    html+='<span style="font-weight:500;color:var(--pine);font-size:13px;">'+t.ticker+' <span class="badge '+t.dir+'">'+t.dir.toUpperCase()+'</span></span>';
+    html+='</label>';
+    html+='<div style="display:flex;align-items:center;gap:8px;">';
+    html+='<span style="font-size:11px;font-weight:700;color:'+wlc+';">'+wl+'</span>';
+    html+='<span class="tc-pnl '+pc+'">'+fmt(t.pnl)+'</span>';
+    html+='</div></div>';
+    html+='<div class="bv-trade-details">';
+    var dets=[['Entry',t.entry],['Exit',t.exit||'—'],['SL',t.sl||'—'],['TP',t.tp||'—'],['R:R',t.rr?t.rr+':1':'—']];
+    for(var j=0;j<dets.length;j++)html+='<div class="bv-detail"><div class="bv-detail-lbl">'+dets[j][0]+'</div><div class="bv-detail-val">'+dets[j][1]+'</div></div>';
+    html+='</div>';
+    if(t.notes)html+='<div style="padding:8px 14px;font-size:11px;color:var(--muted);border-top:1px solid var(--border);">'+t.notes+'</div>';
+    if(t.img||t.img2){html+='<div style="padding:8px 14px;display:flex;gap:8px;border-top:1px solid var(--border);">';if(t.img)html+='<img src="'+t.img+'" style="height:54px;border-radius:6px;object-fit:cover;">';if(t.img2)html+='<img src="'+t.img2+'" style="height:54px;border-radius:6px;object-fit:cover;">';html+='</div>';}
+    html+='</div>';
+  }
+  body.innerHTML=html;
+  var sendBtn=document.querySelector('#trade-preview-modal .log-btn');
+  if(sendBtn)sendBtn.onclick=sendClosedTradePreviewToBuddy;
+  var snapBtn=document.querySelectorAll('#trade-preview-modal .log-btn')[1];
+  if(snapBtn)snapBtn.onclick=saveClosedTradeSnapshot;
+  var m=document.getElementById('trade-preview-modal');if(m)m.classList.add('open');
+}
+function _getCheckedClosedTrades(){
+  var sel=[];
+  var boxes=document.querySelectorAll('#tp-body input[type=checkbox]');
+  for(var i=0;i<boxes.length;i++){if(boxes[i].checked){var tid=boxes[i].id.replace('tp-chk-','');for(var j=0;j<closedTrades.length;j++){if(String(closedTrades[j].id)===tid){sel.push(closedTrades[j]);break;}}}}
+  return sel;
+}
+function sendClosedTradePreviewToBuddy(){
+  var sel=_getCheckedClosedTrades();
+  if(!sel.length){alert('Select at least one trade to send.');return;}
+  var buddy=getBuddyData();
+  if(!buddy||!buddy.email){alert('Save a buddy email in Settings first.');return;}
+  var lines=sel.map(function(t){return t.ticker+' '+t.dir.toUpperCase()+' | Entry: '+t.entry+' | Exit: '+(t.exit||'—')+' | PNL: '+(t.pnl>=0?'+':'')+t.pnl+' | R:R: '+(t.rr?t.rr+':1':'—')+(t.notes?' | '+t.notes:'');});
+  var totalPnl=sel.reduce(function(s,t){return s+t.pnl;},0);
+  var bodyStr=lines.join('\n')+(sel.length>1?'\n\nTotal PNL: '+(totalPnl>=0?'+':'')+totalPnl.toFixed(2):'');
+  var subj='Trade recap — '+(craneSession?craneSession.username:'')+' ('+sel.length+' trade'+(sel.length!==1?'s':'')+')';
+  window.location.href='mailto:'+encodeURIComponent(buddy.email)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(bodyStr);
+}
+function saveClosedTradeSnapshot(){
+  var sel=_getCheckedClosedTrades();
+  if(!sel.length){alert('Select at least one trade to save.');return;}
+  var W=600,PAD=28,ROW=24,CARD=18,GAP=14;
+  var cardH=function(t){var h=52+32+(t.notes?22:0);return h;};
+  var totalH=PAD+38+12;
+  for(var i=0;i<sel.length;i++)totalH+=cardH(sel[i])+GAP;
+  totalH+=PAD;
+  var cv=document.createElement('canvas');cv.width=W*2;cv.height=totalH*2;
+  var ctx=cv.getContext('2d');ctx.scale(2,2);
+  var CREAM='#faf8f2',PINE='#2d4a3e',MUTED='#9a8e7e',BORDER='#e8e0d0',BULL='#2a6e2d',BEAR='#a83030',GOLD='#b58a2a';
+  ctx.fillStyle=CREAM;ctx.fillRect(0,0,W,totalH);
+  ctx.fillStyle=PINE;ctx.font='bold 15px "Georgia",serif';ctx.fillText('The Migrating Crane',PAD,PAD+14);
+  ctx.fillStyle=MUTED;ctx.font='11px "Courier New",monospace';
+  var dateStr=sel[0].closeDate||sel[0].date;ctx.fillText(dateStr,PAD,PAD+30);
+  ctx.fillStyle=MUTED;ctx.font='11px "Courier New",monospace';
+  var totalPnl=sel.reduce(function(s,t){return s+t.pnl;},0);
+  var totStr='Total PNL: '+(totalPnl>=0?'+':'')+totalPnl.toFixed(2);
+  ctx.fillText(totStr,W-PAD-ctx.measureText(totStr).width,PAD+30);
+  ctx.strokeStyle=BORDER;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(PAD,PAD+42);ctx.lineTo(W-PAD,PAD+42);ctx.stroke();
+  var y=PAD+54;
+  for(var i=0;i<sel.length;i++){
+    var t=sel[i];var ch=cardH(t);
+    ctx.fillStyle='white';ctx.strokeStyle=BORDER;ctx.lineWidth=1;
+    roundRect(ctx,PAD,y,W-PAD*2,ch,8);ctx.fill();ctx.stroke();
+    var wl=t.pnl>=0?'W':'L';var wlc=t.pnl>=0?BULL:BEAR;
+    ctx.fillStyle=wlc;ctx.font='bold 13px "Courier New",monospace';ctx.fillText(wl,PAD+12,y+20);
+    ctx.fillStyle=PINE;ctx.font='bold 13px "Georgia",serif';ctx.fillText(t.ticker+' '+t.dir.toUpperCase(),PAD+30,y+20);
+    ctx.fillStyle=wlc;ctx.font='bold 13px "Courier New",monospace';
+    var pnlStr=(t.pnl>=0?'+':'')+fmt(t.pnl);
+    ctx.fillText(pnlStr,W-PAD-ctx.measureText(pnlStr).width-12,y+20);
+    ctx.strokeStyle=BORDER;ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(PAD,y+30);ctx.lineTo(W-PAD,y+30);ctx.stroke();
+    var fields=[['Entry',t.entry],['Exit',t.exit||'—'],['SL',t.sl||'—'],['TP',t.tp||'—'],['R:R',t.rr?t.rr+':1':'—']];
+    var fw=(W-PAD*2)/fields.length;
+    for(var j=0;j<fields.length;j++){
+      var fx=PAD+j*fw+fw/2;
+      ctx.fillStyle=MUTED;ctx.font='8px "Courier New",monospace';ctx.textAlign='center';ctx.fillText(fields[j][0],fx,y+42);
+      ctx.fillStyle=PINE;ctx.font='bold 11px "Courier New",monospace';ctx.fillText(String(fields[j][1]),fx,y+54);
+    }
+    ctx.textAlign='left';
+    if(t.notes){
+      ctx.strokeStyle=BORDER;ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(PAD,y+62);ctx.lineTo(W-PAD,y+62);ctx.stroke();
+      ctx.fillStyle=MUTED;ctx.font='10px "Courier New",monospace';
+      ctx.fillText(t.notes.length>70?t.notes.slice(0,70)+'…':t.notes,PAD+12,y+ch-8);
+    }
+    y+=ch+GAP;
+  }
+  ctx.fillStyle=MUTED;ctx.font='9px "Courier New",monospace';ctx.textAlign='center';
+  ctx.fillText('migrating-crane.trading',W/2,totalH-10);
+  cv.toBlob(function(blob){
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='crane-trades-'+(sel[0].closeDate||sel[0].date)+'.png';a.click();URL.revokeObjectURL(a.href);
+  },'image/png');
+}
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
 function renderBuddyView(){
   var dayKey=diaryDateStr(diaryDate);
   var c=closedTrades.filter(function(t){return (t.closeDate||t.date)===dayKey;});
@@ -917,10 +1175,11 @@ function updateMigration(){
   var mwl=document.getElementById('mig-wl');if(mwl)mwl.textContent=wins.length+' wins \u00b7 '+losses.length+' losses';
   var mt=document.getElementById('mig-total');if(mt)mt.textContent=c.length;
   var mo=document.getElementById('mig-oc');if(mo)mo.textContent=openTrades.length+' open \u00b7 '+c.length+' closed';
-  var md=document.getElementById('mig-dep');if(md)md.textContent=deposit?deposit.toLocaleString('sv-SE')+' kr':'0 kr';
-  var se=document.getElementById('mig-sp');if(se){se.textContent=fmt(spp);se.className='mig-stat-val'+(spp>0?' pos':spp<0?' neg':'');}
+  var md=document.getElementById('mig-dep');if(md)md.textContent=deposit?deposit.toLocaleString('en-US'):'0';
+  var cb=deposit+cpp;
+  var cbe=document.getElementById('mig-cb');if(cbe){cbe.textContent=cb.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});cbe.className='mig-stat-val'+(cb>deposit?' pos':cb<deposit?' neg':'');}
   var ce=document.getElementById('mig-cp');if(ce){ce.textContent=fmt(cpp);ce.className='mig-stat-val'+(cpp>0?' pos':cpp<0?' neg':'');}
-  var cs=document.getElementById('mig-cs');if(cs)cs.textContent=deposit>0?((cpp/deposit)*100).toFixed(1)+'% av ins\u00e4ttning':'cumulative';
+  var cs=document.getElementById('mig-cs');if(cs)cs.textContent=deposit>0?((cpp/deposit)*100).toFixed(1)+'% of starting balance':'cumulative';
   var dl=document.getElementById('donut-long');var ds=document.getElementById('donut-short');var dp=document.getElementById('donut-pct');
   if(dl){dl.setAttribute('stroke-dasharray',lp+' '+(100-lp));dl.setAttribute('stroke-dashoffset',25);}
   if(ds){ds.setAttribute('stroke-dasharray',sp+' '+(100-sp));ds.setAttribute('stroke-dashoffset',25-lp);}
@@ -1212,6 +1471,30 @@ function seedAdminUser(){
   }
 }
 
+function exportData(){
+  var data={open:openTrades,closed:closedTrades,comments:tradeComments,deposit:deposit,exportedAt:new Date().toISOString(),user:craneSession?craneSession.username:''};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='crane-trades-'+(new Date().toISOString().split('T')[0])+'.json';
+  a.click();URL.revokeObjectURL(a.href);
+}
+function importData(e){
+  var file=e.target.files[0];if(!file)return;
+  if(!confirm('This will replace all your current trades with the imported data. Continue?'))return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var d=JSON.parse(ev.target.result);
+      saveUndoState();
+      openTrades=d.open||[];closedTrades=d.closed||[];tradeComments=d.comments||{};
+      if(d.deposit!=null)deposit=d.deposit;
+      saveLocalTrades();refreshTG();
+      alert('Import successful — '+closedTrades.length+' closed trades, '+openTrades.length+' open trades loaded.');
+    }catch(err){alert('Could not read file. Make sure it is a valid export from this app.');}
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
 function saveLocalTrades(){
   if(!craneSession)return;
   var key='crane_trades_'+craneSession.userId;
